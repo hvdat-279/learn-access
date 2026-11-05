@@ -1,0 +1,61 @@
+name: Build Android APK
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "preview = APK độc lập; development = bản kết nối Metro"
+        required: true
+        default: preview
+        type: choice
+        options: [preview, development]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      EXPO_ACCOUNT_OWNER: ${{ vars.EXPO_ACCOUNT_OWNER }}
+      EXPO_PUBLIC_EAS_PROJECT_ID: ${{ vars.EXPO_PUBLIC_EAS_PROJECT_ID }}
+      EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL }}
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Check Expo configuration
+        run: |
+          test -n "$EXPO_TOKEN" || { echo 'Add EXPO_TOKEN to GitHub Secrets.'; exit 1; }
+          test -n "$EXPO_PUBLIC_EAS_PROJECT_ID" || { echo 'Add EXPO_PUBLIC_EAS_PROJECT_ID to GitHub Variables.'; exit 1; }
+      - run: npm ci
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Pass public runtime configuration to the build worker
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const config = JSON.parse(fs.readFileSync('eas.json', 'utf8'));
+          const names = ['EXPO_PUBLIC_SUPABASE_URL', 'EXPO_PUBLIC_SUPABASE_ANON_KEY', 'EXPO_PUBLIC_EAS_PROJECT_ID', 'EXPO_ACCOUNT_OWNER'];
+          const env = Object.fromEntries(names.map(name => [name, process.env[name] || '']));
+          for (const profile of Object.values(config.build)) profile.env = {...profile.env, ...env};
+          fs.writeFileSync('eas.json', JSON.stringify(config, null, 2));
+          NODE
+      - name: Build APK on Expo
+        env:
+          BUILD_PROFILE: ${{ inputs.profile }}
+        run: eas build --platform android --profile "$BUILD_PROFILE" --non-interactive --wait --json > build-result.json
+      - name: Download APK
+        run: |
+          APK_URL=$(jq -r '.[0].artifacts.buildUrl // empty' build-result.json)
+          test -n "$APK_URL" || { echo 'No APK artifact returned. Check Expo build logs.'; exit 1; }
+          curl --fail --location "$APK_URL" --output LearnAccess.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LearnAccess-${{ inputs.profile }}
+          path: LearnAccess.apk
+          retention-days: 14

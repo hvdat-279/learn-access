@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "LearnAccess",
+    "slug": "learnaccess",
+    "scheme": "learnaccess",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.learningaccess.learnaccess",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Ch\u1ee5p t\u00e0i li\u1ec7u \u0111\u1ec3 chuy\u1ec3n th\u00e0nh n\u1ed9i dung d\u1ec5 \u0111\u1ecdc.",
+        "NSPhotoLibraryUsageDescription": "Ch\u1ecdn \u1ea3nh t\u00e0i li\u1ec7u \u0111\u1ec3 nh\u1eadn di\u1ec7n ch\u1eef."
+      }
+    },
+    "android": {
+      "package": "com.learningaccess.learnaccess",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundColor": "#5945C6"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "headers": {
+            "Cross-Origin-Embedder-Policy": "credentialless",
+            "Cross-Origin-Opener-Policy": "same-origin"
+          }
+        }
+      ],
+      "expo-sqlite",
+      "expo-secure-store",
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Ch\u1ecdn \u1ea3nh t\u00e0i li\u1ec7u \u0111\u1ec3 nh\u1eadn di\u1ec7n ch\u1eef.",
+          "cameraPermission": "Ch\u1ee5p t\u00e0i li\u1ec7u \u0111\u1ec3 chuy\u1ec3n th\u00e0nh n\u1ed9i dung d\u1ec5 \u0111\u1ecdc.",
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}

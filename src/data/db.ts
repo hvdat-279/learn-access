@@ -1,0 +1,11 @@
+import { openDatabaseSync } from "expo-sqlite";
+import { drizzle } from "drizzle-orm/expo-sqlite";
+const sqlite = openDatabaseSync("learnaccess.db");
+sqlite.execSync(`PRAGMA journal_mode = WAL;
+ CREATE TABLE IF NOT EXISTS documents (id TEXT PRIMARY KEY NOT NULL, owner_id TEXT NOT NULL, payload TEXT NOT NULL);
+ CREATE INDEX IF NOT EXISTS documents_owner ON documents(owner_id);
+ CREATE TABLE IF NOT EXISTS outbox (id TEXT PRIMARY KEY NOT NULL, owner_id TEXT NOT NULL, document_id TEXT NOT NULL, payload TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, error TEXT);
+ CREATE INDEX IF NOT EXISTS outbox_owner ON outbox(owner_id);
+ CREATE TABLE IF NOT EXISTS preferences (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);
+ PRAGMA user_version = 1;`);
+export const db = drizzle(sqlite);
