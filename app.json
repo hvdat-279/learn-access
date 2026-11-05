@@ -11,8 +11,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.learningaccess.learnaccess",
       "infoPlist": {
-        "NSCameraUsageDescription": "Ch\u1ee5p t\u00e0i li\u1ec7u \u0111\u1ec3 chuy\u1ec3n th\u00e0nh n\u1ed9i dung d\u1ec5 \u0111\u1ecdc.",
-        "NSPhotoLibraryUsageDescription": "Ch\u1ecdn \u1ea3nh t\u00e0i li\u1ec7u \u0111\u1ec3 nh\u1eadn di\u1ec7n ch\u1eef."
+        "NSCameraUsageDescription": "Chụp tài liệu để chuyển thành nội dung dễ đọc.",
+        "NSPhotoLibraryUsageDescription": "Chọn ảnh tài liệu để nhận diện chữ."
       }
     },
     "android": {
@@ -42,14 +42,29 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Ch\u1ecdn \u1ea3nh t\u00e0i li\u1ec7u \u0111\u1ec3 nh\u1eadn di\u1ec7n ch\u1eef.",
-          "cameraPermission": "Ch\u1ee5p t\u00e0i li\u1ec7u \u0111\u1ec3 chuy\u1ec3n th\u00e0nh n\u1ed9i dung d\u1ec5 \u0111\u1ecdc.",
+          "photosPermission": "Chọn ảnh tài liệu để nhận diện chữ.",
+          "cameraPermission": "Chụp tài liệu để chuyển thành nội dung dễ đọc.",
           "microphonePermission": false
         }
       ]
     ],
     "experiments": {
       "typedRoutes": false
-    }
+    },
+    "extra": {
+      "router": {
+        "headers": {
+          "Cross-Origin-Embedder-Policy": "credentialless",
+          "Cross-Origin-Opener-Policy": "same-origin"
+        },
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "d57c85ea-6c48-404c-86b7-a5e7b616a045"
+      }
+    },
+    "owner": "tuaw_khoiii"
   }
 }
