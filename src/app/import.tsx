@@ -18,6 +18,7 @@ import { useAuth, refreshDocuments } from "../ui/provider";
 import { prepare, recognizeDocument } from "../data/ingestion";
 import { repository, createDocument } from "../data/repository";
 import type { Document } from "../domain/model";
+
 export default function Import() {
   const { ownerId } = useAuth();
   const [document, setDocument] = useState<Document>();
@@ -27,18 +28,35 @@ export default function Import() {
   const [manual, setManual] = useState(false);
   const [text, setText] = useState("");
   const abort = useRef<AbortController | null>(null);
+
   useEffect(() => () => abort.current?.abort(), []);
-  async function choose(kind: "camera" | "image" | "pdf") {
+
+  async function choose(kind: "camera" | "image" | "file") {
     setError("");
     setBusy(true);
     try {
-      if (kind === "pdf") {
+      if (kind === "file") {
         const result = await DocumentPicker.getDocumentAsync({
-          type: "application/pdf",
+          type: [
+            "application/pdf",
+            "text/plain",
+            "text/markdown",
+            "text/csv",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/msword",
+            "*/*",
+          ],
           copyToCacheDirectory: true,
         });
-        if (!result.canceled)
-          setDocument(await prepare(ownerId, result.assets));
+        if (!result.canceled && result.assets.length > 0) {
+          const doc = await prepare(ownerId, result.assets);
+          if (doc.status === "ready") {
+            await refreshDocuments();
+            router.replace(`/document/${doc.id}`);
+            return;
+          }
+          setDocument(doc);
+        }
       } else {
         const permission =
           kind === "camera"
@@ -55,18 +73,23 @@ export default function Import() {
                 selectionLimit: 5,
                 quality: 0.9,
               });
-        if (!result.canceled)
-          setDocument(
-            await prepare(
-              ownerId,
-              result.assets.map((a) => ({
-                uri: a.uri,
-                name: a.fileName ?? undefined,
-                size: a.fileSize,
-                mimeType: a.mimeType,
-              })),
-            ),
+        if (!result.canceled && result.assets.length > 0) {
+          const doc = await prepare(
+            ownerId,
+            result.assets.map((a) => ({
+              uri: a.uri,
+              name: a.fileName ?? undefined,
+              size: a.fileSize,
+              mimeType: a.mimeType,
+            })),
           );
+          if (doc.status === "ready") {
+            await refreshDocuments();
+            router.replace(`/document/${doc.id}`);
+            return;
+          }
+          setDocument(doc);
+        }
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Không thể mở tài liệu.");
@@ -74,6 +97,50 @@ export default function Import() {
       setBusy(false);
     }
   }
+
+  async function addMorePages(kind: "camera" | "image") {
+    if (!document) return;
+    setError("");
+    setBusy(true);
+    try {
+      const permission =
+        kind === "camera"
+          ? await ImagePicker.requestCameraPermissionsAsync()
+          : await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted)
+        throw new Error("Hãy cấp quyền để chụp hoặc chọn thêm ảnh.");
+
+      const result =
+        kind === "camera"
+          ? await ImagePicker.launchCameraAsync({ quality: 0.9 })
+          : await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ["images"],
+              allowsMultipleSelection: true,
+              quality: 0.9,
+            });
+
+      if (!result.canceled && result.assets.length > 0) {
+        const newPages = [];
+        const dir = new Directory(Paths.document, ownerId, document.id);
+        dir.create({ intermediates: true, idempotent: true });
+        for (const asset of result.assets) {
+          const pageId = Crypto.randomUUID();
+          const target = new File(dir, pageId + ".jpg");
+          new File(asset.uri).copy(target);
+          newPages.push({ id: pageId, uri: target.uri, status: "pending" as const });
+        }
+        setDocument({
+          ...document,
+          pages: [...document.pages, ...newPages],
+        });
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không thể thêm trang ảnh mới.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function recognize() {
     if (!document) return;
     setBusy(true);
@@ -89,6 +156,16 @@ export default function Import() {
         },
       );
       setDocument(done);
+
+      if (!done.blocks.length) {
+        const firstError = done.pages.find((p) => p.error)?.error;
+        setError(
+          firstError ||
+            "Không nhận diện được văn bản trong ảnh. Hãy chụp góc rõ nét hơn hoặc dùng tính năng 'Dán văn bản thủ công'.",
+        );
+        return;
+      }
+
       await refreshDocuments();
       router.replace(`/document/${done.id}`);
     } catch (e) {
@@ -97,6 +174,7 @@ export default function Import() {
       setBusy(false);
     }
   }
+
   async function saveManual() {
     if (!text.trim()) return;
     setBusy(true);
@@ -122,6 +200,7 @@ export default function Import() {
       setBusy(false);
     }
   }
+
   return (
     <Screen>
       <Heading
@@ -139,7 +218,7 @@ export default function Import() {
               mode="contained"
               onPress={() => choose("camera")}
             >
-              Chụp tài liệu
+              Chụp tài liệu bằng Camera
             </Button>
             <Button
               disabled={busy}
@@ -147,19 +226,18 @@ export default function Import() {
               mode="outlined"
               onPress={() => choose("image")}
             >
-              Chọn ảnh từ thư viện
+              Chọn ảnh từ thư viện (Tối đa 5 ảnh)
             </Button>
             <Button
               disabled={busy}
-              icon="file-pdf-box"
+              icon="file-document-outline"
               mode="outlined"
-              onPress={() => choose("pdf")}
+              onPress={() => choose("file")}
             >
-              Nhập PDF
+              Nhập tệp tài liệu (PDF, Word, TXT)
             </Button>
             <Text style={{ opacity: 0.65, lineHeight: 22 }}>
-              Tối đa 5 trang · 20 MB/file. Đặt trang giấy thẳng và đủ sáng để
-              nhận diện tốt hơn.
+              Hỗ trợ file PDF, văn bản Word/TXT hoặc chọn tới 5 ảnh một lượt.
             </Text>
           </Panel>
           <Button
@@ -178,15 +256,15 @@ export default function Import() {
             label="Nội dung học tập"
             value={text}
             onChangeText={setText}
-            mode="outlined"
-            style={{ minHeight: 180 }}
+            placeholder="Dán bài báo, đoạn văn hoặc bài giảng vào đây…"
+            style={{ minHeight: 140 }}
           />
           <Button
             mode="contained"
             disabled={busy || !text.trim()}
             onPress={saveManual}
           >
-            Lưu văn bản
+            Lưu vào thư viện
           </Button>
         </Panel>
       )}
@@ -266,13 +344,36 @@ export default function Import() {
               </View>
             </Panel>
           ))}
+
+          {/* Nút chụp thêm hoặc thêm ảnh từ máy */}
+          <View style={{ flexDirection: "row", gap: 10, marginVertical: 6 }}>
+            <Button
+              mode="outlined"
+              icon="camera-plus-outline"
+              disabled={busy}
+              style={{ flex: 1 }}
+              onPress={() => addMorePages("camera")}
+            >
+              Chụp thêm trang
+            </Button>
+            <Button
+              mode="outlined"
+              icon="image-plus"
+              disabled={busy}
+              style={{ flex: 1 }}
+              onPress={() => addMorePages("image")}
+            >
+              Thêm ảnh từ máy
+            </Button>
+          </View>
+
           <Button
             mode="contained"
             icon="text-recognition"
             disabled={busy || !document.title.trim()}
             onPress={recognize}
           >
-            Nhận diện văn bản
+            Nhận diện văn bản (OCR)
           </Button>
         </>
       )}
