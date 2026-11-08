@@ -39,6 +39,7 @@
       "expo-sqlite",
       "expo-secure-store",
       "expo-web-browser",
+      "expo-sharing",
       [
         "expo-image-picker",
         {
