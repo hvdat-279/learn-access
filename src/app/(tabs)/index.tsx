@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import { Button, Text, Icon, useTheme } from "react-native-paper";
+import { Button, Text, Icon, useTheme, Chip } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import {
@@ -9,14 +9,17 @@ import {
   Empty,
   Loading,
   Notice,
+  GuestBanner,
 } from "../../ui/components";
 import { useAuth, useDocuments } from "../../ui/provider";
 import { useSettings } from "../../ui/store";
+
 export default function Home() {
   const { data: documents = [], isLoading, error } = useDocuments();
-  const { email } = useAuth();
+  const { email, ownerId } = useAuth();
   const t = useTheme();
   const settings = useSettings();
+
   return (
     <Screen>
       <View
@@ -40,11 +43,15 @@ export default function Home() {
             Một chút mỗi ngày,{"\n"}hiểu thêm thật nhiều.
           </Text>
         </View>
-        <Icon source="white-balance-sunny" color="#BE7F13" size={34} />
       </View>
+
       <Text style={{ opacity: 0.7 }}>
         Chào {email ? email.split("@")[0] : "bạn"}! Hôm nay mình học gì nhỉ?
       </Text>
+
+      {/* Banner nhắc đăng nhập nếu đang là khách */}
+      {ownerId === "local" && <GuestBanner />}
+
       <LinearGradient
         colors={["#6650D8", "#43338E"]}
         start={{ x: 0, y: 0 }}
@@ -85,18 +92,30 @@ export default function Home() {
           Chụp tài liệu, nắm ý chính và lắng nghe bài học — ngay trong một ứng
           dụng.
         </Text>
-        <Button
-          mode="contained"
-          icon="plus"
-          buttonColor="#F5D778"
-          textColor="#33275C"
-          contentStyle={{ height: 52 }}
-          style={{ alignSelf: "flex-start" }}
-          onPress={() => router.push("/import")}
-        >
-          Thêm tài liệu mới
-        </Button>
+        <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
+          <Button
+            mode="contained"
+            icon="plus"
+            buttonColor="#F5D778"
+            textColor="#33275C"
+            contentStyle={{ height: 48 }}
+            onPress={() => router.push("/import")}
+          >
+            Thêm tài liệu mới
+          </Button>
+          <Button
+            mode="outlined"
+            icon="account-group"
+            textColor="#FFFFFF"
+            style={{ borderColor: "#FFFFFF88" }}
+            contentStyle={{ height: 48 }}
+            onPress={() => router.push("/community")}
+          >
+            Khám phá cộng đồng
+          </Button>
+        </View>
       </LinearGradient>
+
       {!settings.onboarded && (
         <Panel>
           <Text variant="titleMedium" style={{ fontWeight: "700" }}>
@@ -104,9 +123,9 @@ export default function Home() {
           </Text>
           <View style={{ gap: 15 }}>
             {[
-              ["camera-outline", "01", "Chụp hoặc nhập tài liệu"],
-              ["creation", "02", "Hiểu ý chính, đối chiếu nguồn"],
-              ["headphones", "03", "Nghe và học lại offline"],
+              ["camera-outline", "01", "Chụp hoặc nhập tài liệu (PDF, Word, TXT, Ảnh)"],
+              ["creation", "02", "Hiểu ý chính, đối chiếu nguồn & làm Quiz"],
+              ["headphones", "03", "Nghe và ôn luyện Flashcard offline"],
             ].map(([icon, n, label]) => (
               <View
                 key={n}
@@ -123,6 +142,7 @@ export default function Home() {
           </Button>
         </Panel>
       )}
+
       <View
         style={{
           flexDirection: "row",
@@ -135,6 +155,7 @@ export default function Home() {
         </Text>
         <Button onPress={() => router.push("/library")}>Xem tất cả</Button>
       </View>
+
       {isLoading ? (
         <Loading />
       ) : error ? (
@@ -153,6 +174,7 @@ export default function Home() {
           action={() => router.push("/import")}
         />
       )}
+
       <Panel color={t.colors.surfaceVariant}>
         <View style={{ flexDirection: "row", gap: 12 }}>
           <Icon
@@ -161,10 +183,9 @@ export default function Home() {
             color={t.colors.primary}
           />
           <View style={{ flex: 1, gap: 6 }}>
-            <Text variant="titleSmall">Hiểu rõ hơn, nhớ lâu hơn</Text>
+            <Text variant="titleSmall">Học tập thông minh hơn</Text>
             <Text style={{ lineHeight: 22, opacity: 0.75 }}>
-              Sau khi đọc tóm tắt, thử bấm “Xem đoạn gốc” để tự kiểm tra từng ý
-              chính.
+              Sau khi tóm tắt AI, hãy chuyển sang tab "Ôn tập" để kiểm tra kiến thức bằng Flashcard và đề trắc nghiệm tự động!
             </Text>
           </View>
         </View>

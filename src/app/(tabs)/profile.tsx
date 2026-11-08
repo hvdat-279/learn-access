@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { View, ScrollView } from "react-native";
 import {
   Button,
   Text,
@@ -7,6 +7,7 @@ import {
   Chip,
   RadioButton,
   TextInput,
+  useTheme,
 } from "react-native-paper";
 import * as Speech from "expo-speech";
 import { router } from "expo-router";
@@ -18,6 +19,7 @@ import { sync, pendingCount } from "../../data/sync";
 import { repository } from "../../data/repository";
 import * as Crypto from "expo-crypto";
 export default function Profile() {
+  const t = useTheme();
   const { ownerId, email } = useAuth();
   const settings = useSettings();
   const [voices, setVoices] = useState<Speech.Voice[]>([]);
@@ -189,23 +191,36 @@ export default function Profile() {
       </Panel>
       <Panel>
         <Text variant="titleLarge">Giọng đọc</Text>
-        <RadioButton.Group
-          value={settings.voice}
-          onValueChange={(voice) => settings.change({ voice })}
+        <View
+          style={{
+            maxHeight: 220,
+            borderWidth: 1,
+            borderColor: t.colors.outlineVariant ?? "rgba(150, 150, 150, 0.25)",
+            borderRadius: 12,
+            overflow: "hidden",
+            marginVertical: 6,
+          }}
         >
-          <RadioButton.Item label="Mặc định của thiết bị" value="" />
-          {voices
-            .filter(
-              (v) => v.language.startsWith("vi") || v.language.startsWith("en"),
-            )
-            .map((v) => (
-              <RadioButton.Item
-                key={v.identifier}
-                label={v.name + " · " + v.language}
-                value={v.identifier}
-              />
-            ))}
-        </RadioButton.Group>
+          <ScrollView nestedScrollEnabled style={{ maxHeight: 220 }}>
+            <RadioButton.Group
+              value={settings.voice}
+              onValueChange={(voice) => settings.change({ voice })}
+            >
+              <RadioButton.Item label="Mặc định của thiết bị" value="" />
+              {voices
+                .filter(
+                  (v) => v.language.startsWith("vi") || v.language.startsWith("en"),
+                )
+                .map((v) => (
+                  <RadioButton.Item
+                    key={v.identifier}
+                    label={v.name + " · " + v.language}
+                    value={v.identifier}
+                  />
+                ))}
+            </RadioButton.Group>
+          </ScrollView>
+        </View>
         <Button
           icon="volume-high"
           onPress={() => {

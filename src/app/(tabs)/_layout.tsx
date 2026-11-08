@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router";
 import { Icon, useTheme } from "react-native-paper";
+
 export default function TabLayout() {
   const t = useTheme();
   return (
@@ -19,7 +20,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <Icon
               source="home-variant-outline"
-              size={25}
+              size={24}
               color={typeof color === "string" ? color : undefined}
             />
           ),
@@ -32,7 +33,20 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <Icon
               source="bookshelf"
-              size={25}
+              size={24}
+              color={typeof color === "string" ? color : undefined}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="community"
+        options={{
+          title: "Cộng đồng",
+          tabBarIcon: ({ color }) => (
+            <Icon
+              source="account-group-outline"
+              size={24}
               color={typeof color === "string" ? color : undefined}
             />
           ),
@@ -45,7 +59,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <Icon
               source="account-circle-outline"
-              size={25}
+              size={24}
               color={typeof color === "string" ? color : undefined}
             />
           ),

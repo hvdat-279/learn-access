@@ -19,38 +19,60 @@ import { supabase } from "../data/supabase";
 import { repository, onLocalChange } from "../data/repository";
 import { sync } from "../data/sync";
 import { useSettings } from "./store";
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: { retry: false, staleTime: 0 },
     mutations: { retry: false },
   },
 });
+
 const AuthContext = createContext({
   ownerId: "local",
   email: "",
   ready: false,
 });
+
 export const useAuth = () => useContext(AuthContext);
+
 export function useDocuments() {
   const { ownerId } = useAuth();
   return useQuery({
     queryKey: ["documents", ownerId],
-    queryFn: () => repository.list(ownerId),
+    queryFn: async () => (await repository.list(ownerId)) ?? [],
   });
 }
+
 export function useDocument(id: string) {
   const { ownerId } = useAuth();
   return useQuery({
     queryKey: ["document", ownerId, id],
-    queryFn: () => repository.get(id, ownerId),
+    queryFn: async () => (await repository.get(id, ownerId)) ?? null,
   });
 }
+
+export function usePublicDocuments() {
+  return useQuery({
+    queryKey: ["public_documents"],
+    queryFn: async () => (await repository.listPublic()) ?? [],
+  });
+}
+
+export async function refreshPublicDocuments() {
+  await queryClient.invalidateQueries({
+    predicate: (q) => q.queryKey[0] === "public_documents",
+  });
+}
+
 export async function refreshDocuments() {
   await queryClient.invalidateQueries({
     predicate: (q) =>
-      q.queryKey[0] === "documents" || q.queryKey[0] === "document",
+      q.queryKey[0] === "documents" ||
+      q.queryKey[0] === "document" ||
+      q.queryKey[0] === "public_documents",
   });
 }
+
 export function Provider({ children }: { children: React.ReactNode }) {
   const dark = useSettings((s) => s.dark);
   const previousOwner = useRef<string | null>(null);
@@ -59,6 +81,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
     email: "",
     ready: !supabase,
   });
+
   useEffect(() => {
     if (!supabase) return;
     const {
@@ -83,6 +106,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
     });
     return () => subscription.unsubscribe();
   }, []);
+
   useEffect(() => {
     if (auth.ownerId === "local") return;
     let active = true;
@@ -119,6 +143,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
       sub.remove();
     };
   }, [auth.ownerId]);
+
   const base = dark ? MD3DarkTheme : MD3LightTheme;
   const theme = {
     ...base,
@@ -133,6 +158,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
       onSurface: dark ? "#F4F0FF" : "#25213E",
     },
   };
+
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
