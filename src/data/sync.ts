@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { File, Directory, Paths } from "expo-file-system";
 import * as Crypto from "expo-crypto";
 import { db } from "./db";
-import { outbox } from "./schema";
+import { outbox, documents } from "./schema";
 import { repository } from "./repository";
 import { requireBackend } from "./supabase";
 import type { Document, SyncService } from "../domain/model";
@@ -25,25 +25,38 @@ async function execute(ownerId: string) {
       continue;
     try {
       await checkOwner();
-      const latest = await repository.get(operation.documentId, ownerId);
-      if (!latest) {
+      const localRow = db
+        .select()
+        .from(documents)
+        .where(
+          and(
+            eq(documents.id, operation.documentId),
+            eq(documents.ownerId, ownerId),
+          ),
+        )
+        .get();
+      const local = localRow?.payload;
+      if (!local && !operation.payload) {
         db.delete(outbox).where(eq(outbox.id, operation.id)).run();
         continue;
       }
+      const latest = local ?? operation.payload;
       const payload: Document = JSON.parse(JSON.stringify(operation.payload));
-      for (const page of payload.pages) {
-        const existing = latest.pages.find((p) => p.id === page.id);
-        if (existing?.remotePath) page.remotePath = existing.remotePath;
-        if (!page.remotePath && page.uri) {
-          const path = `${ownerId}/${payload.id}/${page.id}.jpg`;
-          const bytes = await new File(page.uri).bytes();
-          const { error } = await client.storage
-            .from("documents")
-            .upload(path, bytes, { contentType: "image/jpeg", upsert: true });
-          if (error) throw error;
-          page.remotePath = path;
+      if (!payload.deleted) {
+        for (const page of payload.pages) {
+          const existing = latest.pages.find((p) => p.id === page.id);
+          if (existing?.remotePath) page.remotePath = existing.remotePath;
+          if (!page.remotePath && page.uri) {
+            const path = `${ownerId}/${payload.id}/${page.id}.jpg`;
+            const bytes = await new File(page.uri).bytes();
+            const { error } = await client.storage
+              .from("documents")
+              .upload(path, bytes, { contentType: "image/jpeg", upsert: true });
+            if (error) throw error;
+            page.remotePath = path;
+          }
+          page.uri = "";
         }
-        page.uri = "";
       }
       await checkOwner();
       const { data, error } = await client.rpc("sync_document", {
@@ -125,7 +138,26 @@ async function execute(ownerId: string) {
         .get()
     )
       continue;
-    const local = await repository.get(row.id, ownerId);
+    const localRow = db
+      .select()
+      .from(documents)
+      .where(and(eq(documents.id, row.id), eq(documents.ownerId, ownerId)))
+      .get();
+    const local = localRow?.payload;
+
+    // Nếu tài liệu đã bị xóa ở máy này, không bao giờ hồi sinh lại
+    if (local?.deleted) {
+      continue;
+    }
+
+    // Nếu tài liệu bị đánh dấu xóa trên server
+    if (row.payload.deleted) {
+      if (local && !local.deleted) {
+        await repository.save({ ...local, deleted: true, serverVersion: row.version }, false);
+      }
+      continue;
+    }
+
     const document: Document = {
       ...row.payload,
       ownerId,
