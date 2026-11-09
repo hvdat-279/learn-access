@@ -24,7 +24,6 @@ import { useAuth, useDocument, refreshDocuments, refreshPublicDocuments } from "
 import { useSettings } from "../../ui/store";
 import { repository, preference } from "../../data/repository";
 import { ai } from "../../data/ai";
-import { recognizeDocument } from "../../data/ingestion";
 import {
   applySummary,
   applyQuiz,

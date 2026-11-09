@@ -84,7 +84,9 @@ Deno.serve(async (req) => {
       (input.task === "explain" && (!input.blockId || !ids.has(input.blockId)))
     )
       return response({ error: "Đoạn nguồn không hợp lệ." }, 400);
-    const apiKey = Deno.env.get("GEMINI_API_KEY");
+    const apiKey =
+      Deno.env.get("GEMINI_API_KEY") ||
+      Deno.env.get("EXPO_PUBLIC_GEMINI_API_KEY");
     const model = Deno.env.get("GEMINI_MODEL");
     if (!apiKey || !model)
       return response({ error: "Dịch vụ AI chưa được cấu hình." }, 503);
