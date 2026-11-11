@@ -126,8 +126,12 @@ export default function Import() {
         for (const asset of result.assets) {
           const pageId = Crypto.randomUUID();
           const target = new File(dir, pageId + ".jpg");
-          new File(asset.uri).copy(target);
-          newPages.push({ id: pageId, uri: target.uri, status: "pending" as const });
+          await new File(asset.uri).copy(target);
+          newPages.push({
+            id: pageId,
+            uri: target.uri,
+            status: "pending" as const,
+          });
         }
         setDocument({
           ...document,
@@ -135,7 +139,9 @@ export default function Import() {
         });
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể thêm trang ảnh mới.");
+      setError(
+        e instanceof Error ? e.message : "Không thể thêm trang ảnh mới.",
+      );
     } finally {
       setBusy(false);
     }
@@ -237,7 +243,8 @@ export default function Import() {
               Nhập tệp tài liệu (PDF, Word, TXT)
             </Button>
             <Text style={{ opacity: 0.65, lineHeight: 22 }}>
-              Hỗ trợ file PDF, văn bản Word/TXT hoặc chọn tới 5 ảnh một lượt.
+              PDF từ 1–5 trang, tối đa 20 MB; hoặc văn bản Word/TXT và tối đa 5
+              ảnh một lượt.
             </Text>
           </Panel>
           <Button
@@ -316,7 +323,7 @@ export default function Import() {
                         new Directory(Paths.document, ownerId, document.id),
                         pageId + ".jpg",
                       );
-                      new File(image.uri).move(dest);
+                      await new File(image.uri).move(dest);
                       setDocument({
                         ...document,
                         pages: document.pages.map((p) =>

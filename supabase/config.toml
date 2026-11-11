@@ -1,3 +1,5 @@
 project_id = "learnaccess"
 [functions.study]
 verify_jwt = true
+[functions.ocr]
+verify_jwt = true

@@ -84,9 +84,7 @@ Deno.serve(async (req) => {
       (input.task === "explain" && (!input.blockId || !ids.has(input.blockId)))
     )
       return response({ error: "Đoạn nguồn không hợp lệ." }, 400);
-    const apiKey =
-      Deno.env.get("GEMINI_API_KEY") ||
-      Deno.env.get("EXPO_PUBLIC_GEMINI_API_KEY");
+    const apiKey = Deno.env.get("GEMINI_API_KEY");
     const model = Deno.env.get("GEMINI_MODEL");
     if (!apiKey || !model)
       return response({ error: "Dịch vụ AI chưa được cấu hình." }, 503);
@@ -110,11 +108,20 @@ Deno.serve(async (req) => {
         p_limit: Number(Deno.env.get("AI_DAILY_LIMIT") || 20),
       },
     );
-    if (quotaError)
-      return response(
-        { error: "Đã hết lượt AI hôm nay hoặc yêu cầu không hợp lệ." },
-        429,
+    if (quotaError) {
+      console.error("reserve_ai failed", quotaError.code, quotaError.message);
+      const quotaReached = quotaError.message.includes(
+        "Daily AI limit reached",
       );
+      return response(
+        {
+          error: quotaReached
+            ? "Đã hết lượt AI hôm nay."
+            : "Chưa khởi tạo được lượt AI. Kiểm tra migration reserve_ai.",
+        },
+        quotaReached ? 429 : 503,
+      );
+    }
     if (reservation.cached)
       return reservation.result
         ? response(reservation.result)
@@ -170,9 +177,23 @@ Deno.serve(async (req) => {
         }),
       },
     );
-    if (!upstream.ok)
-      return response({ error: "Dịch vụ AI đang bận. Hãy thử lại sau." }, 502);
     const generated = await upstream.json();
+    if (!upstream.ok) {
+      const upstreamMessage =
+        typeof generated?.error?.message === "string"
+          ? generated.error.message
+          : "Unknown Gemini error";
+      console.error("Gemini upstream failed", upstream.status, upstreamMessage);
+      const message =
+        upstream.status === 401 || upstream.status === 403
+          ? "Gemini từ chối API key. Hãy kiểm tra secret GEMINI_API_KEY."
+          : upstream.status === 404
+            ? "Không tìm thấy model Gemini. Hãy kiểm tra secret GEMINI_MODEL."
+            : upstream.status === 429
+              ? "Gemini đã hết quota. Hãy thử lại sau."
+              : "Dịch vụ Gemini đang lỗi. Hãy thử lại sau.";
+      return response({ error: message }, 502);
+    }
     const text = generated.candidates?.[0]?.content?.parts
       ?.map((p: { text?: string }) => p.text ?? "")
       .join("");

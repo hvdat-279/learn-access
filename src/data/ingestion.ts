@@ -10,11 +10,15 @@ export async function prepare(
   assets: { uri: string; name?: string; size?: number; mimeType?: string }[],
 ): Promise<Document> {
   if (assets.length > MAX_PAGES) throw new Error("Chỉ chọn tối đa 5 ảnh.");
-  
+
   const name = assets[0]?.name?.toLowerCase() || "";
   const mime = assets[0]?.mimeType?.toLowerCase() || "";
   const isPdf = mime === "application/pdf" || name.endsWith(".pdf");
-  const isText = mime.startsWith("text/") || name.endsWith(".txt") || name.endsWith(".md") || name.endsWith(".csv");
+  const isText =
+    mime.startsWith("text/") ||
+    name.endsWith(".txt") ||
+    name.endsWith(".md") ||
+    name.endsWith(".csv");
 
   const document = createDocument(
     ownerId,
@@ -43,24 +47,33 @@ export async function prepare(
         .filter(Boolean);
 
       document.status = "ready";
-      document.blocks = (paragraphs.length ? paragraphs : [content]).map((text) => ({
-        id: Crypto.randomUUID(),
-        page: 1,
-        text,
-        original: text,
-      }));
+      document.blocks = (paragraphs.length ? paragraphs : [content]).map(
+        (text) => ({
+          id: Crypto.randomUUID(),
+          page: 1,
+          text,
+          original: text,
+        }),
+      );
       await repository.save(document);
       return document;
     } else if (isPdf) {
       const source = new File(directory, "source.pdf");
-      file.copy(source);
-      const count = await pdf.pageCount(source.uri);
+      await file.copy(source);
+      let count: number;
+      try {
+        count = await pdf.pageCount(source.uri);
+      } catch {
+        throw new Error(
+          "Không mở được PDF. Hãy chọn file không khóa mật khẩu và có từ 1 đến 5 trang.",
+        );
+      }
       validateFile(source.size, count);
       for (let index = 0; index < count; index++) {
         const uri = await pdf.renderPage(source.uri, index);
         const id = Crypto.randomUUID();
         const dest = new File(directory, id + ".jpg");
-        new File(uri).move(dest);
+        await new File(uri).move(dest);
         document.pages.push({ id, uri: dest.uri, status: "pending" });
       }
     } else {
@@ -71,7 +84,7 @@ export async function prepare(
       );
       const id = Crypto.randomUUID();
       const dest = new File(directory, id + ".jpg");
-      new File(normalized.uri).move(dest);
+      await new File(normalized.uri).move(dest);
       document.pages.push({ id, uri: dest.uri, status: "pending" });
     }
   }

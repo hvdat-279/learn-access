@@ -1,18 +1,15 @@
 import { requireOptionalNativeModule } from "expo-modules-core";
+import * as Crypto from "expo-crypto";
 import { File } from "expo-file-system";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import type { OcrService, PdfService } from "../domain/model";
+import { invokeAuthenticated } from "./functions";
 
 type NativeApi = {
   recognize(uri: string): Promise<string[]>;
   pageCount(uri: string): Promise<number>;
   renderPage(uri: string, page: number): Promise<string>;
 };
-
-const GEMINI_API_KEY =
-  process.env.EXPO_PUBLIC_GEMINI_API_KEY ||
-  process.env.GEMINI_API_KEY ||
-  "";
 
 async function getBase64(uri: string): Promise<string> {
   try {
@@ -56,44 +53,19 @@ async function geminiVisionOcr(uri: string): Promise<string[]> {
       throw new Error("Không thể đọc được dữ liệu ảnh để gửi AI.");
     }
 
-    const cleanBase64 = base64.replace(/^data:image\/[a-z]+;base64,/, "").trim();
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 45000);
-
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      signal: controller.signal,
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                text: "Bạn là chuyên gia số hóa tài liệu. Hãy đọc và trích xuất TOÀN BỘ chữ (tiếng Việt hoặc tiếng Anh) trong bức ảnh này một cách trung thực và đầy đủ nhất. Nếu ảnh chụp màn hình, hãy bỏ qua các thành phần ngoài lề như thanh công cụ, tên tab trình duyệt. Giữ nguyên định dạng các đoạn văn bản. Chỉ trả về nội dung chữ nhận diện được.",
-              },
-              {
-                inlineData: {
-                  mimeType: "image/jpeg",
-                  data: cleanBase64,
-                },
-              },
-            ],
-          },
-        ],
-      }),
-    });
-    clearTimeout(timeout);
-
-    if (!res.ok) {
-      const errText = await res.text();
-      console.warn("Gemini OCR HTTP status:", res.status, errText);
-      throw new Error(`Máy chủ AI phản hồi lỗi (${res.status}).`);
-    }
-    const data = await res.json();
-    const parts = data.candidates?.[0]?.content?.parts || [];
-    const text = parts.map((p: { text?: string }) => p.text || "").join("").trim();
+    const cleanBase64 = base64
+      .replace(/^data:image\/[a-z]+;base64,/, "")
+      .trim();
+    const data = await invokeAuthenticated<{ text: string }>(
+      "ocr",
+      {
+        requestId: Crypto.randomUUID(),
+        imageBase64: cleanBase64,
+        mimeType: "image/jpeg",
+      },
+      60000,
+    );
+    const text = data.text?.trim() || "";
     if (text) {
       const paragraphs = text
         .split(/\n\s*\n/)
@@ -128,7 +100,7 @@ export const ocr: OcrService = {
         // Fallback to Gemini OCR below
       }
     }
-    // Fallback thông minh: Dùng Gemini Vision OCR khi chạy trên Expo Go
+    // Fallback qua Supabase; Gemini key không nằm trong ứng dụng.
     const cloudTexts = await geminiVisionOcr(uri);
     if (cloudTexts && cloudTexts.length > 0) {
       return cloudTexts;
