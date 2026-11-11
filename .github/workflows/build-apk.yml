@@ -17,7 +17,6 @@ jobs:
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       EXPO_ACCOUNT_OWNER: ${{ vars.EXPO_ACCOUNT_OWNER }}
-      EXPO_PUBLIC_EAS_PROJECT_ID: ${{ vars.EXPO_PUBLIC_EAS_PROJECT_ID }}
       EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL }}
       EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
     steps:
@@ -29,18 +28,20 @@ jobs:
       - name: Check Expo configuration
         run: |
           test -n "$EXPO_TOKEN" || { echo 'Add EXPO_TOKEN to GitHub Secrets.'; exit 1; }
-          test -n "$EXPO_PUBLIC_EAS_PROJECT_ID" || { echo 'Add EXPO_PUBLIC_EAS_PROJECT_ID to GitHub Variables.'; exit 1; }
+          test -n "$EXPO_ACCOUNT_OWNER" || { echo 'Add EXPO_ACCOUNT_OWNER to GitHub Variables.'; exit 1; }
       - run: npm ci
       - uses: expo/expo-github-action@v8
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
+      - name: Create or link the Expo project
+        run: eas project:init --account "$EXPO_ACCOUNT_OWNER" --force --non-interactive
       - name: Pass public runtime configuration to the build worker
         run: |
           node <<'NODE'
           const fs = require('fs');
           const config = JSON.parse(fs.readFileSync('eas.json', 'utf8'));
-          const names = ['EXPO_PUBLIC_SUPABASE_URL', 'EXPO_PUBLIC_SUPABASE_ANON_KEY', 'EXPO_PUBLIC_EAS_PROJECT_ID', 'EXPO_ACCOUNT_OWNER'];
+          const names = ['EXPO_PUBLIC_SUPABASE_URL', 'EXPO_PUBLIC_SUPABASE_ANON_KEY', 'EXPO_ACCOUNT_OWNER'];
           const env = Object.fromEntries(
             names
               .map(name => [name, process.env[name] || ''])

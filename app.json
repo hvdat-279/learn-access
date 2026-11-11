@@ -61,11 +61,8 @@
         "asyncRoutes": {
           "web": true
         }
-      },
-      "eas": {
-        "projectId": "fbfe3979-a07b-4612-9fd0-52f67002e91d"
       }
     },
-    "owner": "tad279s-team"
+    "owner": "tuawkhoiiis-team"
   }
 }
