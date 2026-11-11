@@ -41,7 +41,11 @@ jobs:
           const fs = require('fs');
           const config = JSON.parse(fs.readFileSync('eas.json', 'utf8'));
           const names = ['EXPO_PUBLIC_SUPABASE_URL', 'EXPO_PUBLIC_SUPABASE_ANON_KEY', 'EXPO_PUBLIC_EAS_PROJECT_ID', 'EXPO_ACCOUNT_OWNER'];
-          const env = Object.fromEntries(names.map(name => [name, process.env[name] || '']));
+          const env = Object.fromEntries(
+            names
+              .map(name => [name, process.env[name] || ''])
+              .filter(([, value]) => value)
+          );
           for (const profile of Object.values(config.build)) profile.env = {...profile.env, ...env};
           fs.writeFileSync('eas.json', JSON.stringify(config, null, 2));
           NODE
