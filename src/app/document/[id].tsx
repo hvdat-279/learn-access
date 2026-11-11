@@ -36,7 +36,6 @@ import {
   speechSegments,
   type Document,
   type Block,
-  type Flashcard,
   type QuizQuestion,
 } from "../../domain/model";
 
@@ -1347,7 +1346,7 @@ function Reader({ document }: { document: Document }) {
                   <Panel>
                     <Text variant="titleMedium">Chưa có thẻ ghi nhớ Flashcard</Text>
                     <Text style={{ opacity: 0.7, lineHeight: 22 }}>
-                      Hãy tạo bản tóm tắt AI ở tab "Tóm tắt" để hệ thống tự động trích xuất các thuật ngữ thành bộ Flashcards, hoặc tạo câu hỏi trắc nghiệm ngay bên dưới!
+                      Hãy tạo bản tóm tắt AI ở tab &quot;Tóm tắt&quot; để hệ thống tự động trích xuất các thuật ngữ thành bộ Flashcards, hoặc tạo câu hỏi trắc nghiệm ngay bên dưới!
                     </Text>
                     <Button
                       mode="contained"
@@ -1386,7 +1385,7 @@ function Reader({ document }: { document: Document }) {
                         </Button>
                       </View>
                       <Text style={{ opacity: 0.7 }}>
-                        Chọn câu trả lời đúng nhất và nhấn "Nộp bài & Chấm điểm".
+                        Chọn câu trả lời đúng nhất và nhấn &quot;Nộp bài &amp; Chấm điểm&quot;.
                       </Text>
                     </Panel>
 

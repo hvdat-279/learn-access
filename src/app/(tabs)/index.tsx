@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import { Button, Text, Icon, useTheme, Chip } from "react-native-paper";
+import { Button, Text, Icon, useTheme } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import {
@@ -185,7 +185,7 @@ export default function Home() {
           <View style={{ flex: 1, gap: 6 }}>
             <Text variant="titleSmall">Học tập thông minh hơn</Text>
             <Text style={{ lineHeight: 22, opacity: 0.75 }}>
-              Sau khi tóm tắt AI, hãy chuyển sang tab "Ôn tập" để kiểm tra kiến thức bằng Flashcard và đề trắc nghiệm tự động!
+              Sau khi tóm tắt AI, hãy chuyển sang tab &quot;Ôn tập&quot; để kiểm tra kiến thức bằng Flashcard và đề trắc nghiệm tự động!
             </Text>
           </View>
         </View>

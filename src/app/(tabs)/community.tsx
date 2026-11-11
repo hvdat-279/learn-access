@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { View } from "react-native";
 import {
   Button,
@@ -41,12 +41,6 @@ export default function Community() {
     }
   });
 
-  useEffect(() => {
-    try {
-      const saved = preference.get("community_liked_docs");
-      if (saved) setLikedIds(JSON.parse(saved));
-    } catch {}
-  }, []);
   const [likedFilter, setLikedFilter] = useState(false);
 
   // Dialog yêu cầu đăng nhập khi khách bấm tương tác
