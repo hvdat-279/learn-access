@@ -134,7 +134,7 @@ export default function Community() {
       {isGuest && (
         <View
           style={{
-            backgroundColor: t.colors.secondaryContainer,
+            backgroundColor: t.colors.surface,
             padding: 14,
             borderRadius: 16,
             flexDirection: "row",
@@ -142,21 +142,17 @@ export default function Community() {
             justifyContent: "space-between",
             gap: 10,
             borderWidth: 1,
-            borderColor: t.colors.secondary + "44",
+            borderColor: t.colors.outlineVariant,
           }}
         >
           <View style={{ flex: 1, gap: 2 }}>
-            <Text
-              variant="titleSmall"
-              style={{ fontWeight: "700", color: t.colors.onSecondaryContainer }}
-            >
+            <Text variant="titleSmall" style={{ fontWeight: "700" }}>
               Bạn đang ở chế độ Khách
             </Text>
             <Text
               variant="bodySmall"
               style={{
-                color: t.colors.onSecondaryContainer,
-                opacity: 0.85,
+                color: t.colors.onSurfaceVariant,
                 lineHeight: 18,
               }}
             >
@@ -164,11 +160,9 @@ export default function Community() {
             </Text>
           </View>
           <Button
-            mode="contained"
+            mode="contained-tonal"
             compact
             icon="login"
-            buttonColor={t.colors.secondary}
-            textColor={t.dark ? "#1A0E00" : "#FFFFFF"}
             onPress={() => router.push("/auth")}
             style={{ borderRadius: 10 }}
           >

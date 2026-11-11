@@ -269,77 +269,60 @@ export function GuestBanner() {
   const t = useTheme();
   return (
     <View
-      style={{
-        backgroundColor: t.colors.secondaryContainer,
-        padding: 18,
-        borderRadius: 20,
-        gap: 12,
-        borderWidth: 1,
-        borderColor: t.colors.secondary + "44",
-      }}
+      style={[
+        styles.panel,
+        !t.dark && styles.cardShadow,
+        {
+          backgroundColor: t.colors.surface,
+          borderColor: t.colors.outlineVariant,
+          gap: 12,
+        },
+      ]}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
         <View
           style={{
-            backgroundColor: t.colors.secondary + "22",
-            width: 44,
-            height: 44,
-            borderRadius: 14,
+            backgroundColor: t.colors.primaryContainer,
+            width: 42,
+            height: 42,
+            borderRadius: 12,
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <Icon source="school-outline" size={24} color={t.colors.secondary} />
+          <Icon
+            source="account-outline"
+            size={22}
+            color={t.colors.onPrimaryContainer}
+          />
         </View>
-        <View style={{ flex: 1 }}>
-          <Text
-            variant="titleSmall"
-            style={{ fontWeight: "800", color: t.colors.onSecondaryContainer }}
-          >
-            Chế độ Khách · Offline
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text variant="titleSmall" style={{ fontWeight: "700" }}>
+            Bạn đang dùng chế độ Khách
           </Text>
           <Text
             variant="bodySmall"
-            style={{
-              color: t.colors.onSecondaryContainer,
-              opacity: 0.8,
-              lineHeight: 18,
-            }}
+            style={{ color: t.colors.onSurfaceVariant, lineHeight: 18 }}
           >
-            Dữ liệu được lưu riêng trên thiết bị này
+            Tài liệu đang lưu cục bộ trên máy này
           </Text>
         </View>
       </View>
       <Text
         style={{
-          lineHeight: 21,
-          color: t.colors.onSecondaryContainer,
-          opacity: 0.9,
+          lineHeight: 20,
+          color: t.colors.onSurfaceVariant,
           fontSize: 13,
         }}
       >
-        Đăng nhập để mở khóa{" "}
-        <Text style={{ fontWeight: "700", color: t.colors.onSecondaryContainer }}>
-          AI tóm tắt
-        </Text>
-        ,{" "}
-        <Text style={{ fontWeight: "700", color: t.colors.onSecondaryContainer }}>
-          tạo Quiz
-        </Text>{" "}
-        và{" "}
-        <Text style={{ fontWeight: "700", color: t.colors.onSecondaryContainer }}>
-          đồng bộ đám mây
-        </Text>
-        .
+        Đăng nhập để bật AI tóm tắt, tạo đề Quiz và đồng bộ giữa các thiết bị.
       </Text>
       <Button
-        mode="contained"
+        mode="contained-tonal"
         icon="login"
-        buttonColor={t.colors.secondary}
-        textColor={t.dark ? "#1A0E00" : "#FFFFFF"}
         onPress={() => router.push("/auth")}
-        contentStyle={{ height: 42 }}
-        style={{ alignSelf: "flex-start", borderRadius: 12 }}
+        contentStyle={{ height: 40 }}
+        style={{ alignSelf: "flex-start", borderRadius: 10 }}
       >
         Đăng nhập / Đăng ký
       </Button>
@@ -352,21 +335,21 @@ export function getDocumentKindStyle(kind: Document["kind"], dark: boolean) {
   if (kind === "pdf") {
     return {
       icon: "file-pdf-box",
-      color: dark ? "#FB923C" : "#EA6332",
-      bg: dark ? "#4A2310" : "#FFEDD5",
+      color: dark ? "#FB7185" : "#E11D48",
+      bg: dark ? "#3F1520" : "#FFF1F2",
     };
   }
   if (kind === "docx") {
     return {
       icon: "file-word-box",
-      color: dark ? "#38BDF8" : "#0284C7",
-      bg: dark ? "#0C334A" : "#E0F2FE",
+      color: dark ? "#60A5FA" : "#2463EB",
+      bg: dark ? "#1E3A5F" : "#E8F0FE",
     };
   }
   return {
-    icon: "text-box-outline",
-    color: dark ? "#34D399" : "#0B8775",
-    bg: dark ? "#0F3D34" : "#CCFBF1",
+    icon: "file-document-outline",
+    color: dark ? "#60A5FA" : "#2463EB",
+    bg: dark ? "#1E3A5F" : "#EEF2FF",
   };
 }
 
@@ -455,30 +438,20 @@ export function DocumentCard({
 
       {/* Chips row */}
       <View style={styles.chipRow}>
-        <StatusChip icon="check-circle-outline" label="Đã lưu" tone="success" />
-        {document.folder && (
-          <StatusChip icon="folder-outline" label={document.folder} />
-        )}
+        {document.folder && <StatusChip label={document.folder} />}
         {document.ai?.summary && (
           <StatusChip
-            icon="creation"
             label={
               document.ai.version === document.version
                 ? "Có tóm tắt"
-                : "Cần cập nhật AI"
+                : "Cần cập nhật"
             }
             tone={
               document.ai.version === document.version ? "primary" : "warning"
             }
           />
         )}
-        {document.ai?.quiz && (
-          <StatusChip
-            icon="help-circle-outline"
-            label="Quiz"
-            tone="accent"
-          />
-        )}
+        {document.ai?.quiz && <StatusChip label="Quiz" tone="success" />}
         {document.isPublic && (
           <StatusChip
             icon="earth"
@@ -489,19 +462,29 @@ export function DocumentCard({
           />
         )}
         {Boolean(document.originalId || document.title.includes("(Bản sao)")) && (
-          <StatusChip
-            icon="download-outline"
-            label="Từ Cộng đồng"
-            tone="success"
-          />
+          <StatusChip label="Từ Cộng đồng" />
         )}
         {document.ownerId !== "local" && (
-          <Text
-            variant="labelSmall"
-            style={{ color: t.colors.onSurfaceVariant, alignSelf: "center" }}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 4,
+              paddingHorizontal: 2,
+            }}
           >
-            {pending ? "Chờ đồng bộ" : "Đã đồng bộ"}
-          </Text>
+            <Icon
+              source={pending ? "clock-outline" : "check"}
+              size={14}
+              color={pending ? t.colors.onSurfaceVariant : "#16A34A"}
+            />
+            <Text
+              variant="labelSmall"
+              style={{ color: t.colors.onSurfaceVariant }}
+            >
+              {pending ? "Chờ đồng bộ" : "Đã đồng bộ"}
+            </Text>
+          </View>
         )}
       </View>
 
@@ -527,7 +510,7 @@ export function StatusChip({
   label,
   tone = "neutral",
 }: {
-  icon: string;
+  icon?: string;
   label: string;
   tone?: "neutral" | "primary" | "success" | "warning" | "accent";
 }) {
@@ -538,20 +521,20 @@ export function StatusChip({
       bg: t.colors.surfaceVariant,
     },
     primary: {
-      color: t.dark ? "#34D399" : "#0B8775",
-      bg: t.dark ? "#0F3D34" : "#CCFBF1",
+      color: t.colors.onPrimaryContainer,
+      bg: t.colors.primaryContainer,
     },
     success: {
       color: t.dark ? "#4ADE80" : "#15803D",
       bg: t.dark ? "#143A22" : "#DCFCE7",
     },
     warning: {
-      color: t.dark ? "#FBBF24" : "#B45309",
-      bg: t.dark ? "#423009" : "#FEF3C7",
+      color: t.dark ? "#FBBF24" : "#92400E",
+      bg: t.dark ? "#3B2B08" : "#FEF3C7",
     },
     accent: {
-      color: t.dark ? "#FB923C" : "#EA6332",
-      bg: t.dark ? "#4A2310" : "#FFEDD5",
+      color: t.colors.onSecondaryContainer,
+      bg: t.colors.secondaryContainer,
     },
   }[tone];
 
@@ -562,12 +545,12 @@ export function StatusChip({
         alignItems: "center",
         gap: 4,
         backgroundColor: palette.bg,
-        paddingHorizontal: 8,
+        paddingHorizontal: 10,
         paddingVertical: 4,
-        borderRadius: 8,
+        borderRadius: 999,
       }}
     >
-      <Icon source={icon} size={13} color={palette.color} />
+      {icon && <Icon source={icon} size={13} color={palette.color} />}
       <Text
         variant="labelSmall"
         style={{ color: palette.color, fontWeight: "700" }}
@@ -590,15 +573,15 @@ export const styles = StyleSheet.create({
   },
   panel: {
     padding: 18,
-    borderRadius: 16,
+    borderRadius: 20,
     gap: 14,
     borderWidth: 1,
   },
   cardShadow: {
-    shadowColor: "#0B8775",
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
     elevation: 1,
   },
   iconBox: {

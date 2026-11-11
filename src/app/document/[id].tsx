@@ -515,11 +515,11 @@ function Reader({ document }: { document: Document }) {
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <title>${document.title}</title>
             <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 36px; line-height: 1.6; color: #111D1B; background: #FFFFFF; max-width: 800px; margin: 0 auto; }
-              h1 { color: #0B8775; border-bottom: 2px solid #0B8775; padding-bottom: 8px; margin-bottom: 4px; }
-              .meta { font-size: 13px; color: #4E635E; margin-bottom: 24px; }
-              h2 { color: #0B8775; margin-top: 26px; border-left: 4px solid #EA6332; padding-left: 10px; font-size: 18px; }
-              .summary-box { background: #F5F8F7; border: 1px solid #DDE8E5; border-radius: 12px; padding: 18px; margin: 16px 0; }
+              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 36px; line-height: 1.6; color: #0F172A; background: #FFFFFF; max-width: 800px; margin: 0 auto; }
+              h1 { color: #1E40AF; border-bottom: 2px solid #2463EB; padding-bottom: 8px; margin-bottom: 4px; }
+              .meta { font-size: 13px; color: #64748B; margin-bottom: 24px; }
+              h2 { color: #1E40AF; margin-top: 26px; border-left: 4px solid #2463EB; padding-left: 10px; font-size: 18px; }
+              .summary-box { background: #F6F8FB; border: 1px solid #E2E8F0; border-radius: 12px; padding: 18px; margin: 16px 0; }
               .point { margin: 8px 0; }
               .term { background: #fef3c7; padding: 4px 8px; border-radius: 6px; font-weight: bold; display: inline-block; margin: 4px 0; }
               .block { margin-bottom: 14px; padding: 10px 14px; border-radius: 8px; background: #fafafa; border: 1px solid #f1f5f9; }

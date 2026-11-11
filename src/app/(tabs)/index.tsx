@@ -1,5 +1,6 @@
 import { View, Pressable } from "react-native";
 import { Button, Text, Icon, useTheme } from "react-native-paper";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import {
   Screen,
@@ -9,133 +10,115 @@ import {
   Loading,
   Notice,
   GuestBanner,
+  styles,
 } from "../../ui/components";
 import { useAuth, useDocuments } from "../../ui/provider";
 import { useSettings } from "../../ui/store";
 
-// Thẻ hướng dẫn nhanh (hỗ trợ Light & Dark mode)
-function FeatureCard({
-  icon,
-  tone,
-  title,
-  desc,
-}: {
-  icon: string;
-  tone: "primary" | "secondary" | "tertiary";
-  title: string;
-  desc: string;
-}) {
-  const t = useTheme();
-  const colors = {
-    primary: {
-      icon: t.colors.primary,
-      bg: t.colors.primaryContainer,
-    },
-    secondary: {
-      icon: t.colors.secondary,
-      bg: t.colors.secondaryContainer,
-    },
-    tertiary: {
-      icon: t.colors.tertiary,
-      bg: t.colors.tertiaryContainer,
-    },
-  }[tone];
-
-  return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: t.colors.surface,
-        borderRadius: 16,
-        padding: 14,
-        gap: 8,
-        borderWidth: 1,
-        borderColor: t.colors.outlineVariant,
-      }}
-    >
-      <View
-        style={{
-          width: 38,
-          height: 38,
-          borderRadius: 11,
-          backgroundColor: colors.bg,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Icon source={icon} size={20} color={colors.icon} />
-      </View>
-      <Text variant="titleSmall" style={{ fontWeight: "700", lineHeight: 18 }}>
-        {title}
-      </Text>
-      <Text
-        variant="bodySmall"
-        style={{ color: t.colors.onSurfaceVariant, lineHeight: 17 }}
-      >
-        {desc}
-      </Text>
-    </View>
-  );
-}
-
-// Ô thống kê gọn trên Trang chủ
-function StatTile({
+function StatCard({
   value,
   label,
   icon,
-  color,
-  bg,
+  iconColor,
+  iconBg,
   onPress,
 }: {
   value: number;
   label: string;
   icon: string;
-  color: string;
-  bg: string;
-  onPress?: () => void;
+  iconColor: string;
+  iconBg: string;
+  onPress: () => void;
 }) {
   const t = useTheme();
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => ({
-        flex: 1,
-        backgroundColor: t.colors.surface,
-        borderRadius: 14,
-        padding: 12,
-        borderWidth: 1,
-        borderColor: t.colors.outlineVariant,
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 10,
-        opacity: pressed ? 0.75 : 1,
-      })}
+      accessibilityRole="button"
+      accessibilityLabel={`${value} ${label}`}
+      style={({ pressed }) => [
+        !t.dark && styles.cardShadow,
+        {
+          flex: 1,
+          backgroundColor: t.colors.surface,
+          borderRadius: 16,
+          padding: 12,
+          gap: 8,
+          borderWidth: 1,
+          borderColor: t.colors.outlineVariant,
+          opacity: pressed ? 0.78 : 1,
+        },
+      ]}
     >
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <View
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 9,
+            backgroundColor: iconBg,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Icon source={icon} size={17} color={iconColor} />
+        </View>
+        <Text
+          variant="titleLarge"
+          style={{ fontWeight: "800", color: t.colors.onSurface }}
+        >
+          {value}
+        </Text>
+      </View>
+      <Text
+        variant="labelMedium"
+        style={{ color: t.colors.onSurfaceVariant, fontWeight: "600" }}
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+function StepRow({
+  step,
+  icon,
+  title,
+  desc,
+}: {
+  step: string;
+  icon: string;
+  title: string;
+  desc: string;
+}) {
+  const t = useTheme();
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
       <View
         style={{
-          width: 34,
-          height: 34,
+          width: 36,
+          height: 36,
           borderRadius: 10,
-          backgroundColor: bg,
+          backgroundColor: t.colors.primaryContainer,
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <Icon source={icon} size={18} color={color} />
+        <Icon source={icon} size={18} color={t.colors.onPrimaryContainer} />
       </View>
-      <View style={{ flex: 1 }}>
-        <Text variant="titleMedium" style={{ fontWeight: "800", lineHeight: 20 }}>
-          {value}
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text variant="titleSmall" style={{ fontWeight: "700" }}>
+          {step}. {title}
         </Text>
         <Text
-          variant="labelSmall"
-          style={{ color: t.colors.onSurfaceVariant }}
-          numberOfLines={1}
+          variant="bodySmall"
+          style={{ color: t.colors.onSurfaceVariant, lineHeight: 18 }}
         >
-          {label}
+          {desc}
         </Text>
       </View>
-    </Pressable>
+    </View>
   );
 }
 
@@ -165,8 +148,8 @@ export default function Home() {
             variant="labelMedium"
             style={{
               color: t.colors.primary,
-              letterSpacing: 1.8,
-              fontWeight: "800",
+              letterSpacing: 1.6,
+              fontWeight: "700",
             }}
           >
             LEARNACCESS
@@ -176,78 +159,84 @@ export default function Home() {
             style={{ fontWeight: "800", letterSpacing: -0.4 }}
             numberOfLines={1}
           >
-            Chào {firstName}, cùng học nhé
+            Chào, {firstName}
           </Text>
         </View>
         <Pressable
           onPress={() => router.push("/profile")}
           accessibilityRole="button"
           accessibilityLabel="Mở hồ sơ học tập"
-          style={({ pressed }) => ({
-            backgroundColor: t.colors.surface,
-            borderRadius: 12,
-            width: 42,
-            height: 42,
-            alignItems: "center",
-            justifyContent: "center",
-            borderWidth: 1,
-            borderColor: t.colors.outlineVariant,
-            opacity: pressed ? 0.7 : 1,
-          })}
+          style={({ pressed }) => [
+            !t.dark && styles.cardShadow,
+            {
+              backgroundColor: t.colors.surface,
+              borderRadius: 22,
+              width: 44,
+              height: 44,
+              alignItems: "center",
+              justifyContent: "center",
+              borderWidth: 1,
+              borderColor: t.colors.outlineVariant,
+              opacity: pressed ? 0.7 : 1,
+            },
+          ]}
         >
           <Icon source="account-outline" size={22} color={t.colors.primary} />
         </Pressable>
       </View>
 
-      {/* ── Guest banner ── */}
-      {ownerId === "local" && <GuestBanner />}
-
-      {/* ── Thẻ giới thiệu chính (Sáng, tươi, gọn gàng) ── */}
-      <View
+      {/* ── Thẻ học tập chính ── */}
+      <LinearGradient
+        colors={t.dark ? ["#1E3A5F", "#152945"] : ["#1E40AF", "#1A3380"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={{
-          backgroundColor: t.dark ? "#0F4C42" : "#0B8775",
           padding: 22,
-          borderRadius: 18,
-          gap: 14,
-          borderWidth: 1,
-          borderColor: t.dark ? "#1B6B5E" : "#097263",
+          borderRadius: 22,
+          gap: 12,
+          overflow: "hidden",
         }}
       >
         <View
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
+            position: "absolute",
+            right: -35,
+            top: -35,
+            width: 170,
+            height: 170,
+            borderRadius: 85,
+            backgroundColor: "rgba(255,255,255,0.06)",
+          }}
+        />
+        <View
+          style={{
+            position: "absolute",
+            right: 10,
+            bottom: -40,
+            width: 130,
+            height: 130,
+            borderRadius: 65,
+            backgroundColor: "rgba(255,255,255,0.04)",
+          }}
+        />
+
+        <Text
+          variant="labelSmall"
+          style={{
+            color: "#BFDBFE",
+            letterSpacing: 1.4,
+            fontWeight: "700",
           }}
         >
-          <View
-            style={{
-              backgroundColor: "rgba(255,255,255,0.18)",
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-              borderRadius: 8,
-            }}
-          >
-            <Text
-              variant="labelSmall"
-              style={{
-                color: "#FFFFFF",
-                letterSpacing: 1.2,
-                fontWeight: "700",
-              }}
-            >
-              SỔ TAY HỌC TẬP
-            </Text>
-          </View>
-          <Icon source="book-open-page-variant-outline" size={20} color="#CCFBF1" />
-        </View>
+          KHÔNG GIAN HỌC TẬP
+        </Text>
 
         <Text
           variant="headlineMedium"
           style={{
             color: "#FFFFFF",
             fontWeight: "800",
-            lineHeight: 33,
+            lineHeight: 34,
             letterSpacing: -0.4,
           }}
         >
@@ -255,31 +244,30 @@ export default function Home() {
         </Text>
         <Text
           style={{
-            color: "#CCFBF1",
-            lineHeight: 22,
+            color: "#DBEAFE",
+            lineHeight: 21,
             fontSize: 14,
             maxWidth: 380,
           }}
         >
-          Số hóa trang sách, rút gọn ý chính, nghe lại bài giảng và tự kiểm tra bằng Quiz.
+          Chụp tài liệu, tóm tắt ý chính, nghe lại bài giảng và làm Quiz ôn tập.
         </Text>
 
         <View
           style={{
-            height: 1,
-            backgroundColor: "rgba(255,255,255,0.18)",
-            marginVertical: 2,
+            flexDirection: "row",
+            gap: 10,
+            flexWrap: "wrap",
+            marginTop: 6,
           }}
-        />
-
-        <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
+        >
           <Button
             mode="contained"
             icon="plus"
             buttonColor="#FFFFFF"
-            textColor="#0B8775"
-            contentStyle={{ height: 44 }}
-            style={{ borderRadius: 12, flex: 1 }}
+            textColor="#1E3A8A"
+            contentStyle={{ height: 46 }}
+            style={{ borderRadius: 999, flex: 1 }}
             onPress={() => router.push("/import")}
           >
             Thêm tài liệu
@@ -288,48 +276,54 @@ export default function Home() {
             mode="outlined"
             icon="account-group-outline"
             textColor="#FFFFFF"
-            style={{ borderColor: "rgba(255,255,255,0.55)", borderRadius: 12 }}
-            contentStyle={{ height: 44 }}
+            style={{
+              borderColor: "rgba(255,255,255,0.45)",
+              borderRadius: 999,
+            }}
+            contentStyle={{ height: 46 }}
             onPress={() => router.push("/community")}
           >
             Cộng đồng
           </Button>
         </View>
-      </View>
+      </LinearGradient>
 
-      {/* ── Thống kê học tập nhanh ── */}
+      {/* ── Guest banner ── */}
+      {ownerId === "local" && <GuestBanner />}
+
+      {/* ── 3 ô thống kê học tập tách rời ── */}
       {documents.length > 0 && (
         <View style={{ flexDirection: "row", gap: 10 }}>
-          <StatTile
+          <StatCard
             value={documents.length}
             label="Tài liệu"
-            icon="book-open-outline"
-            color={t.colors.primary}
-            bg={t.colors.primaryContainer}
+            icon="file-document-outline"
+            iconColor={t.dark ? "#60A5FA" : "#2463EB"}
+            iconBg={t.dark ? "#1E3A5F" : "#EFF6FF"}
             onPress={() => router.push("/library")}
           />
-          <StatTile
+          <StatCard
             value={summarizedCount}
             label="Tóm tắt"
-            icon="text-box-check-outline"
-            color={t.colors.tertiary}
-            bg={t.colors.tertiaryContainer}
+            icon="text-box-outline"
+            iconColor={t.dark ? "#818CF8" : "#3B5BDB"}
+            iconBg={t.dark ? "#222B4F" : "#EEF2FF"}
             onPress={() => router.push("/library")}
           />
-          <StatTile
+          <StatCard
             value={quizCount}
             label="Bộ Quiz"
             icon="help-circle-outline"
-            color={t.colors.secondary}
-            bg={t.colors.secondaryContainer}
+            iconColor={t.dark ? "#4ADE80" : "#16A34A"}
+            iconBg={t.dark ? "#143A22" : "#ECFDF5"}
             onPress={() => router.push("/library")}
           />
         </View>
       )}
 
-      {/* ── Tính năng nhanh ── */}
+      {/* ── Hướng dẫn nhanh ── */}
       {!settings.onboarded && (
-        <View style={{ gap: 10 }}>
+        <Panel>
           <View
             style={{
               flexDirection: "row",
@@ -338,39 +332,39 @@ export default function Home() {
             }}
           >
             <Text variant="titleMedium" style={{ fontWeight: "700" }}>
-              Quy trình 3 bước
+              Bắt đầu nhanh
             </Text>
             <Button
               onPress={() => settings.change({ onboarded: true })}
               compact
             >
-              Ẩn hướng dẫn
+              Ẩn
             </Button>
           </View>
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            <FeatureCard
+          <View style={{ gap: 14 }}>
+            <StepRow
+              step="1"
               icon="camera-outline"
-              tone="primary"
-              title="1. Nhập"
-              desc="Chụp hoặc tải PDF, TXT"
+              title="Nhập tài liệu"
+              desc="Chụp trang sách, chọn ảnh hoặc mở tệp PDF, TXT."
             />
-            <FeatureCard
+            <StepRow
+              step="2"
               icon="text-box-check-outline"
-              tone="tertiary"
-              title="2. Tóm tắt"
-              desc="Rút gọn ý & tạo Quiz"
+              title="Tóm tắt ý chính"
+              desc="Rút gọn nội dung trọng tâm và trích xuất thuật ngữ."
             />
-            <FeatureCard
+            <StepRow
+              step="3"
               icon="headphones"
-              tone="secondary"
-              title="3. Ôn tập"
-              desc="Nghe & lật thẻ nhớ"
+              title="Ôn tập chủ động"
+              desc="Nghe đọc bài học, lật thẻ Flashcard và làm Quiz."
             />
           </View>
-        </View>
+        </Panel>
       )}
 
-      {/* ── Recent docs ── */}
+      {/* ── Tài liệu gần đây ── */}
       <View
         style={{
           flexDirection: "row",
@@ -414,32 +408,32 @@ export default function Home() {
         />
       )}
 
-      {/* ── Tip footer ── */}
-      <Panel color={t.colors.surfaceVariant}>
-        <View style={{ flexDirection: "row", gap: 12, alignItems: "flex-start" }}>
+      {/* ── Mẹo học tập ── */}
+      <Panel color={t.dark ? t.colors.surfaceVariant : "#EEF4FF"}>
+        <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
           <View
             style={{
-              backgroundColor: t.colors.primaryContainer,
-              width: 36,
-              height: 36,
-              borderRadius: 10,
+              backgroundColor: t.colors.surface,
+              width: 42,
+              height: 42,
+              borderRadius: 21,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
             <Icon
               source="lightbulb-on-outline"
-              size={19}
+              size={20}
               color={t.colors.primary}
             />
           </View>
-          <View style={{ flex: 1, gap: 4 }}>
+          <View style={{ flex: 1, gap: 2 }}>
             <Text variant="titleSmall" style={{ fontWeight: "700" }}>
               Mẹo ôn bài hiệu quả
             </Text>
             <Text
               style={{
-                lineHeight: 21,
+                lineHeight: 20,
                 color: t.colors.onSurfaceVariant,
                 fontSize: 13,
               }}
@@ -448,7 +442,7 @@ export default function Home() {
               <Text style={{ fontWeight: "700", color: t.colors.primary }}>
                 &quot;Ôn tập&quot;
               </Text>{" "}
-              để lật Flashcard và làm Quiz củng cố trí nhớ ngay nhé.
+              để lật thẻ ghi nhớ.
             </Text>
           </View>
         </View>
