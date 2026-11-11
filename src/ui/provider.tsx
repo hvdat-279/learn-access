@@ -147,15 +147,32 @@ export function Provider({ children }: { children: React.ReactNode }) {
   const base = dark ? MD3DarkTheme : MD3LightTheme;
   const theme = {
     ...base,
-    roundness: 5,
+    roundness: 4,
     colors: {
       ...base.colors,
-      primary: dark ? "#C4B5FD" : "#5945C6",
-      secondary: dark ? "#76D8C2" : "#176C5B",
-      background: dark ? "#171622" : "#F8F7FC",
-      surface: dark ? "#232232" : "#FFFFFF",
-      surfaceVariant: dark ? "#323045" : "#EFECF9",
-      onSurface: dark ? "#F4F0FF" : "#25213E",
+      // Bảng màu tươi sáng: Ngọc lục bảo (Emerald Teal) + San hô (Coral) + Vàng mật (Amber)
+      primary: dark ? "#34D399" : "#0B8775",
+      primaryContainer: dark ? "#0F3D34" : "#CCFBF1",
+      onPrimaryContainer: dark ? "#A7F3D0" : "#084C42",
+      secondary: dark ? "#FB923C" : "#EA6332",
+      secondaryContainer: dark ? "#4A2310" : "#FFEDD5",
+      onSecondaryContainer: dark ? "#FED7AA" : "#7C2D12",
+      tertiary: dark ? "#FBBF24" : "#D97706",
+      tertiaryContainer: dark ? "#423009" : "#FEF3C7",
+      onTertiaryContainer: dark ? "#FDE68A" : "#78350F",
+      background: dark ? "#0E1517" : "#F5F8F7",
+      surface: dark ? "#162023" : "#FFFFFF",
+      surfaceVariant: dark ? "#1F2E32" : "#EAF2F0",
+      onSurface: dark ? "#ECF4F2" : "#111D1B",
+      onSurfaceVariant: dark ? "#9AB0AC" : "#4E635E",
+      outline: dark ? "#32454A" : "#BDD0CC",
+      outlineVariant: dark ? "#233337" : "#DDE8E5",
+      elevation: {
+        ...base.colors.elevation,
+        level0: "transparent",
+        level1: dark ? "#1A272B" : "#EFF5F3",
+        level2: dark ? "#203035" : "#E5EFEC",
+      },
     },
   };
 

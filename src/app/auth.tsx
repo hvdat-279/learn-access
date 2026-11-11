@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Button, TextInput, SegmentedButtons, Text } from "react-native-paper";
+import { View } from "react-native";
+import {
+  Button,
+  TextInput,
+  SegmentedButtons,
+  Text,
+  Icon,
+  useTheme,
+} from "react-native-paper";
 import { router } from "expo-router";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
@@ -7,6 +15,7 @@ import { Screen, Heading, Panel, Notice } from "../ui/components";
 import { requireBackend, configured } from "../data/supabase";
 WebBrowser.maybeCompleteAuthSession();
 export default function Auth() {
+  const t = useTheme();
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -62,7 +71,36 @@ export default function Auth() {
         title="Chào mừng bạn"
         subtitle="Mang thư viện theo bạn, trên mọi thiết bị."
       />
-      <Panel>
+      <Panel accent>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <View
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 14,
+              backgroundColor: t.colors.surfaceVariant,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Icon source="school-outline" size={24} color={t.colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text variant="titleMedium" style={{ fontWeight: "700" }}>
+              {mode === "login"
+                ? "Đăng nhập tài khoản"
+                : mode === "signup"
+                  ? "Tạo tài khoản học tập"
+                  : "Khôi phục mật khẩu"}
+            </Text>
+            <Text
+              variant="bodySmall"
+              style={{ color: t.colors.onSurfaceVariant }}
+            >
+              Đồng bộ thư viện & mở khóa tính năng AI
+            </Text>
+          </View>
+        </View>
         <SegmentedButtons
           value={mode}
           onValueChange={setMode}
@@ -76,6 +114,7 @@ export default function Auth() {
           mode="outlined"
           keyboardType="email-address"
           autoCapitalize="none"
+          outlineStyle={{ borderRadius: 14 }}
           value={email}
           onChangeText={setEmail}
         />
@@ -84,6 +123,7 @@ export default function Auth() {
             label="Mật khẩu"
             mode="outlined"
             secureTextEntry
+            outlineStyle={{ borderRadius: 14 }}
             value={password}
             onChangeText={setPassword}
           />
@@ -92,6 +132,8 @@ export default function Auth() {
           mode="contained"
           loading={busy}
           disabled={busy || !configured}
+          contentStyle={{ height: 46 }}
+          style={{ borderRadius: 14 }}
           onPress={() => perform(submit)}
         >
           {mode === "login"
@@ -100,14 +142,25 @@ export default function Auth() {
               ? "Tạo tài khoản"
               : "Gửi email khôi phục"}
         </Button>
-        <Button onPress={() => setMode(mode === "reset" ? "login" : "reset")}>
+        <Button
+          compact
+          onPress={() => setMode(mode === "reset" ? "login" : "reset")}
+        >
           {mode === "reset" ? "Quay lại đăng nhập" : "Quên mật khẩu?"}
         </Button>
-        <Text style={{ textAlign: "center", opacity: 0.5 }}>hoặc</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <View style={{ flex: 1, height: 1, backgroundColor: t.colors.outlineVariant }} />
+          <Text variant="labelSmall" style={{ color: t.colors.onSurfaceVariant }}>
+            hoặc
+          </Text>
+          <View style={{ flex: 1, height: 1, backgroundColor: t.colors.outlineVariant }} />
+        </View>
         <Button
           icon="google"
           mode="outlined"
           disabled={busy || !configured}
+          contentStyle={{ height: 46 }}
+          style={{ borderRadius: 14 }}
           onPress={() =>
             perform(async () => {
               const client = requireBackend();

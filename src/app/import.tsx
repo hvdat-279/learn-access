@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { Image, View } from "react-native";
+import { Image, View, Pressable } from "react-native";
 import {
   Button,
   Text,
   TextInput,
   ProgressBar,
   IconButton,
+  Icon,
+  useTheme,
 } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
@@ -18,6 +20,87 @@ import { useAuth, refreshDocuments } from "../ui/provider";
 import { prepare, recognizeDocument } from "../data/ingestion";
 import { repository, createDocument } from "../data/repository";
 import type { Document } from "../domain/model";
+
+function ImportOption({
+  icon,
+  title,
+  subtitle,
+  tone,
+  disabled,
+  onPress,
+}: {
+  icon: string;
+  title: string;
+  subtitle: string;
+  tone: "primary" | "secondary" | "tertiary";
+  disabled?: boolean;
+  onPress: () => void;
+}) {
+  const t = useTheme();
+  const palette = {
+    primary: {
+      color: t.colors.primary,
+      bg: t.colors.primaryContainer,
+    },
+    secondary: {
+      color: t.colors.secondary,
+      bg: t.colors.secondaryContainer,
+    },
+    tertiary: {
+      color: t.colors.tertiary,
+      bg: t.colors.tertiaryContainer,
+    },
+  }[tone];
+
+  return (
+    <Pressable
+      disabled={disabled}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      style={({ pressed }) => ({
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 14,
+        padding: 14,
+        borderRadius: 16,
+        backgroundColor: t.colors.surfaceVariant,
+        borderWidth: 1,
+        borderColor: t.colors.outlineVariant,
+        opacity: disabled ? 0.5 : pressed ? 0.75 : 1,
+      })}
+    >
+      <View
+        style={{
+          width: 46,
+          height: 46,
+          borderRadius: 14,
+          backgroundColor: palette.bg,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Icon source={icon} size={24} color={palette.color} />
+      </View>
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text variant="titleSmall" style={{ fontWeight: "700" }}>
+          {title}
+        </Text>
+        <Text
+          variant="bodySmall"
+          style={{ color: t.colors.onSurfaceVariant, lineHeight: 18 }}
+        >
+          {subtitle}
+        </Text>
+      </View>
+      <Icon
+        source="chevron-right"
+        size={20}
+        color={t.colors.onSurfaceVariant}
+      />
+    </Pressable>
+  );
+}
 
 export default function Import() {
   const { ownerId } = useAuth();
@@ -205,53 +288,56 @@ export default function Import() {
     <Screen>
       <Heading
         back
-        title="Thêm một điều mới"
+        title="Thêm tài liệu mới"
         subtitle="Một trang sách hôm nay, một ý tưởng cho ngày mai."
       />
       {!document && (
         <>
-          <Panel>
-            <Text variant="titleLarge">Bạn muốn bắt đầu từ đâu?</Text>
-            <Button
-              disabled={busy}
-              icon="camera-outline"
-              mode="contained"
-              onPress={() => choose("camera")}
-            >
-              Chụp tài liệu bằng Camera
-            </Button>
-            <Button
-              disabled={busy}
-              icon="image-multiple-outline"
-              mode="outlined"
-              onPress={() => choose("image")}
-            >
-              Chọn ảnh từ thư viện (Tối đa 5 ảnh)
-            </Button>
-            <Button
-              disabled={busy}
-              icon="file-document-outline"
-              mode="outlined"
-              onPress={() => choose("file")}
-            >
-              Nhập tệp tài liệu (PDF, Word, TXT)
-            </Button>
-            <Text style={{ opacity: 0.65, lineHeight: 22 }}>
-              Hỗ trợ file PDF, văn bản Word/TXT hoặc chọn tới 5 ảnh một lượt.
+          <Panel accent>
+            <Text variant="titleMedium" style={{ fontWeight: "700" }}>
+              Chọn nguồn tài liệu
             </Text>
+            <ImportOption
+              icon="camera-outline"
+              title="Chụp tài liệu bằng Camera"
+              subtitle="Chụp trang sách, bảng viết hoặc phiếu bài tập"
+              tone="primary"
+              disabled={busy}
+              onPress={() => choose("camera")}
+            />
+            <ImportOption
+              icon="image-multiple-outline"
+              title="Chọn ảnh từ thư viện"
+              subtitle="Tối đa 5 ảnh rõ nét trong một lượt quét OCR"
+              tone="tertiary"
+              disabled={busy}
+              onPress={() => choose("image")}
+            />
+            <ImportOption
+              icon="file-document-outline"
+              title="Nhập tệp tài liệu"
+              subtitle="Hỗ trợ file PDF, TXT, Markdown hoặc CSV"
+              tone="secondary"
+              disabled={busy}
+              onPress={() => choose("file")}
+            />
           </Panel>
           <Button
+            mode={manual ? "contained-tonal" : "outlined"}
             disabled={busy}
             icon="text"
+            contentStyle={{ height: 46 }}
+            style={{ borderRadius: 14 }}
             onPress={() => setManual(!manual)}
           >
-            Hoặc dán văn bản của bạn
+            {manual ? "Ẩn khung dán văn bản" : "Hoặc dán văn bản thủ công"}
           </Button>
         </>
       )}
       {manual && !document && (
         <Panel>
           <TextInput
+            mode="outlined"
             multiline
             label="Nội dung học tập"
             value={text}
@@ -261,6 +347,9 @@ export default function Import() {
           />
           <Button
             mode="contained"
+            icon="content-save-outline"
+            contentStyle={{ height: 46 }}
+            style={{ borderRadius: 14 }}
             disabled={busy || !text.trim()}
             onPress={saveManual}
           >

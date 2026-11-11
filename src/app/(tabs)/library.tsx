@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Share } from "react-native";
+import { View, Share, ScrollView } from "react-native";
 import {
   Button,
   Searchbar,
@@ -177,7 +177,7 @@ export default function Library() {
   return (
     <Screen>
       <Heading
-        title="Thư viện của bạn"
+        title="Thư viện"
         subtitle="Những điều đã học, luôn ở đây."
       />
 
@@ -228,12 +228,23 @@ export default function Library() {
           placeholder="Tìm tên, môn học hoặc nội dung…"
           value={search}
           onChangeText={setSearch}
+          elevation={0}
+          style={{
+            backgroundColor: t.colors.surface,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: t.colors.outlineVariant,
+          }}
         />
       )}
 
       {/* Bộ lọc trạng thái & Thư mục môn học */}
       {!selectionMode && (
-        <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 8, paddingVertical: 2 }}
+        >
           <Chip
             selected={sourceFilter === "all" && !favorite && selectedFolder === "all"}
             showSelectedCheck={false}
@@ -299,7 +310,7 @@ export default function Library() {
               {f}
             </Chip>
           ))}
-        </View>
+        </ScrollView>
       )}
 
       {!selectionMode && (
@@ -307,7 +318,8 @@ export default function Library() {
           <Button
             mode="contained"
             icon="plus"
-            style={{ flex: 1 }}
+            contentStyle={{ height: 44 }}
+            style={{ flex: 1, borderRadius: 14 }}
             onPress={() => router.push("/import")}
           >
             Thêm tài liệu mới
@@ -315,6 +327,8 @@ export default function Library() {
           <Button
             mode="outlined"
             icon="account-group"
+            contentStyle={{ height: 44 }}
+            style={{ borderRadius: 14 }}
             onPress={() => router.push("/community")}
           >
             Cộng đồng
