@@ -5,7 +5,11 @@ import {
 } from "@supabase/supabase-js";
 import { requireBackend } from "./supabase";
 
-type FunctionFailure = { message: string; status?: number };
+type FunctionFailure = {
+  message: string;
+  status?: number;
+  retryable?: boolean;
+};
 
 async function readFailure(error: unknown): Promise<FunctionFailure> {
   if (error instanceof FunctionsHttpError) {
@@ -14,17 +18,25 @@ async function readFailure(error: unknown): Promise<FunctionFailure> {
     try {
       const body = await error.context.json();
       if (typeof body?.error === "string")
-        return { message: body.error, status };
+        return {
+          message: body.error,
+          status,
+          retryable: status !== undefined && status >= 500,
+        };
     } catch {}
     return {
       message: `Máy chủ phản hồi lỗi${status ? ` (${status})` : ""}.`,
       status,
+      retryable: status !== undefined && status >= 500,
     };
   }
   if (error instanceof FunctionsRelayError)
-    return { message: "Supabase chưa chuyển được yêu cầu." };
+    return { message: "Supabase chưa chuyển được yêu cầu.", retryable: true };
   if (error instanceof FunctionsFetchError)
-    return { message: "Không kết nối được tới máy chủ. Hãy kiểm tra mạng." };
+    return {
+      message: "Không kết nối được tới máy chủ. Hãy kiểm tra mạng.",
+      retryable: true,
+    };
   return {
     message: error instanceof Error ? error.message : "Không gọi được dịch vụ.",
   };
@@ -58,6 +70,10 @@ export async function invokeAuthenticated<T>(
       if (failure.status === 401 && attempt === 0) {
         const { error: refreshError } = await client.auth.refreshSession();
         if (!refreshError) continue;
+      }
+      if (failure.retryable && attempt === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        continue;
       }
       throw new Error(failure.message);
     } finally {

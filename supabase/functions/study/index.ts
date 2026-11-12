@@ -85,8 +85,8 @@ Deno.serve(async (req) => {
     )
       return response({ error: "Đoạn nguồn không hợp lệ." }, 400);
     const apiKey = Deno.env.get("GEMINI_API_KEY");
-    const model = Deno.env.get("GEMINI_MODEL");
-    if (!apiKey || !model)
+    const model = Deno.env.get("GEMINI_MODEL") || "gemini-3.5-flash";
+    if (!apiKey)
       return response({ error: "Dịch vụ AI chưa được cấu hình." }, 503);
     const hash = Array.from(
       new Uint8Array(
