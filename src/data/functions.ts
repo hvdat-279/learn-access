@@ -11,23 +11,74 @@ type FunctionFailure = {
   retryable?: boolean;
 };
 
-async function readFailure(error: unknown): Promise<FunctionFailure> {
-  if (error instanceof FunctionsHttpError) {
-    const status =
-      error.context instanceof Response ? error.context.status : undefined;
+type ResponseLike = {
+  status?: unknown;
+  clone?: () => ResponseLike;
+  json?: () => Promise<unknown>;
+  text?: () => Promise<string>;
+};
+
+function messageFromBody(body: unknown): string | undefined {
+  if (typeof body === "string") return body.trim() || undefined;
+  if (!body || typeof body !== "object") return undefined;
+  const value = body as {
+    error?: unknown;
+    message?: unknown;
+  };
+  if (typeof value.error === "string") return value.error;
+  if (
+    value.error &&
+    typeof value.error === "object" &&
+    "message" in value.error &&
+    typeof value.error.message === "string"
+  )
+    return value.error.message;
+  return typeof value.message === "string" ? value.message : undefined;
+}
+
+async function responseMessage(
+  context: ResponseLike,
+): Promise<string | undefined> {
+  let copy: ResponseLike | undefined;
+  try {
+    copy = context.clone?.();
+  } catch {}
+
+  if (context.json) {
     try {
-      const body = await error.context.json();
-      if (typeof body?.error === "string")
-        return {
-          message: body.error,
-          status,
-          retryable: status !== undefined && status >= 500,
-        };
+      const message = messageFromBody(await context.json());
+      if (message) return message;
     } catch {}
+  }
+
+  const textSource = copy ?? context;
+  if (!textSource.text) return undefined;
+  try {
+    const body = (await textSource.text()).trim();
+    if (!body || body.startsWith("<")) return undefined;
+    try {
+      return messageFromBody(JSON.parse(body));
+    } catch {
+      return body.length <= 300 ? body : undefined;
+    }
+  } catch {
+    return undefined;
+  }
+}
+
+export async function readFunctionFailure(
+  error: unknown,
+): Promise<FunctionFailure> {
+  if (error instanceof FunctionsHttpError) {
+    const context = error.context as ResponseLike;
+    const status =
+      typeof context?.status === "number" ? context.status : undefined;
+    const message = context ? await responseMessage(context) : undefined;
     return {
-      message: `Máy chủ phản hồi lỗi${status ? ` (${status})` : ""}.`,
+      message:
+        message ?? `Máy chủ phản hồi lỗi${status ? ` (${status})` : ""}.`,
       status,
-      retryable: status !== undefined && status >= 500,
+      retryable: status === undefined || status >= 500,
     };
   }
   if (error instanceof FunctionsRelayError)
@@ -66,7 +117,7 @@ export async function invokeAuthenticated<T>(
         if (!data) throw new Error("Dịch vụ không trả về dữ liệu.");
         return data as T;
       }
-      const failure = await readFailure(error);
+      const failure = await readFunctionFailure(error);
       if (failure.status === 401 && attempt === 0) {
         const { error: refreshError } = await client.auth.refreshSession();
         if (!refreshError) continue;

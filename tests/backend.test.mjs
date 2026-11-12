@@ -38,6 +38,15 @@ before(async () => {
       "utf8",
     ),
   );
+  await db.exec(
+    await readFile(
+      new URL(
+        "../supabase/migrations/202611120001_retry_pending_ai.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
 });
 after(async () => db?.close());
 async function asUser(id, action) {
@@ -143,7 +152,16 @@ test("AI quota counts unique requests and rejects requests over limit", async ()
     ]);
   const a = await reserve(id);
   assert.equal(a.rows[0].result.cached, false);
-  assert.equal((await reserve(id)).rows[0].result.cached, true);
+  const pendingRetry = await reserve(id);
+  assert.equal(pendingRetry.rows[0].result.cached, false);
+  assert.equal(pendingRetry.rows[0].result.retry, true);
+  await db.query("UPDATE ai_requests SET result=$1::jsonb WHERE id=$2", [
+    JSON.stringify({ text: "done" }),
+    id,
+  ]);
+  const completedRetry = await reserve(id);
+  assert.equal(completedRetry.rows[0].result.cached, true);
+  assert.equal(completedRetry.rows[0].result.result.text, "done");
   await reserve(crypto.randomUUID());
   await assert.rejects(reserve(crypto.randomUUID()));
 });
