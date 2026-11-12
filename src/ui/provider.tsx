@@ -147,15 +147,32 @@ export function Provider({ children }: { children: React.ReactNode }) {
   const base = dark ? MD3DarkTheme : MD3LightTheme;
   const theme = {
     ...base,
-    roundness: 5,
+    roundness: 4,
     colors: {
       ...base.colors,
-      primary: dark ? "#C4B5FD" : "#5945C6",
-      secondary: dark ? "#76D8C2" : "#176C5B",
-      background: dark ? "#171622" : "#F8F7FC",
-      surface: dark ? "#232232" : "#FFFFFF",
-      surfaceVariant: dark ? "#323045" : "#EFECF9",
-      onSurface: dark ? "#F4F0FF" : "#25213E",
+      // Bảng màu hài hòa: Xanh học thuật dịu (Calm Blue) + Xám đá trung tính (Cool Slate)
+      primary: dark ? "#60A5FA" : "#2463EB",
+      primaryContainer: dark ? "#1E3A5F" : "#E8F0FE",
+      onPrimaryContainer: dark ? "#DBEAFE" : "#173B8A",
+      secondary: dark ? "#94A3B8" : "#475569",
+      secondaryContainer: dark ? "#243044" : "#E8EEF5",
+      onSecondaryContainer: dark ? "#E2E8F0" : "#1E293B",
+      tertiary: dark ? "#2DD4BF" : "#0D9488",
+      tertiaryContainer: dark ? "#133A38" : "#E6F7F5",
+      onTertiaryContainer: dark ? "#CCFBF1" : "#0F524C",
+      background: dark ? "#0F141E" : "#F6F8FB",
+      surface: dark ? "#171E2C" : "#FFFFFF",
+      surfaceVariant: dark ? "#20293A" : "#EDF2F7",
+      onSurface: dark ? "#F1F5F9" : "#0F172A",
+      onSurfaceVariant: dark ? "#94A3B8" : "#64748B",
+      outline: dark ? "#334155" : "#CBD5E1",
+      outlineVariant: dark ? "#253042" : "#E2E8F0",
+      elevation: {
+        ...base.colors.elevation,
+        level0: "transparent",
+        level1: dark ? "#1B2333" : "#F1F5F9",
+        level2: dark ? "#212B3E" : "#E8EEF5",
+      },
     },
   };
 

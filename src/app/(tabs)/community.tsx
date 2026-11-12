@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View } from "react-native";
+import { View, ScrollView } from "react-native";
 import {
   Button,
   Searchbar,
@@ -11,7 +11,16 @@ import {
   Portal,
 } from "react-native-paper";
 import { router } from "expo-router";
-import { Screen, Heading, Panel, Loading, Notice, styles } from "../../ui/components";
+import {
+  Screen,
+  Heading,
+  Panel,
+  Loading,
+  Notice,
+  StatusChip,
+  getDocumentKindStyle,
+  styles,
+} from "../../ui/components";
 import {
   useAuth,
   usePublicDocuments,
@@ -125,28 +134,37 @@ export default function Community() {
       {isGuest && (
         <View
           style={{
-            backgroundColor: t.colors.surfaceVariant,
+            backgroundColor: t.colors.surface,
             padding: 14,
             borderRadius: 16,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
             gap: 10,
+            borderWidth: 1,
+            borderColor: t.colors.outlineVariant,
           }}
         >
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, gap: 2 }}>
             <Text variant="titleSmall" style={{ fontWeight: "700" }}>
               Bạn đang ở chế độ Khách
             </Text>
-            <Text variant="bodySmall" style={{ opacity: 0.75, lineHeight: 18 }}>
-              Bạn có thể tự do đọc tài liệu. Hãy đăng nhập để thả tim và lưu bài về máy.
+            <Text
+              variant="bodySmall"
+              style={{
+                color: t.colors.onSurfaceVariant,
+                lineHeight: 18,
+              }}
+            >
+              Đọc tự do · Đăng nhập để thả tim và lưu bài
             </Text>
           </View>
           <Button
-            mode="contained"
+            mode="contained-tonal"
             compact
             icon="login"
             onPress={() => router.push("/auth")}
+            style={{ borderRadius: 10 }}
           >
             Đăng nhập
           </Button>
@@ -157,10 +175,21 @@ export default function Community() {
         placeholder="Tìm môn học, tác giả, tài liệu…"
         value={search}
         onChangeText={setSearch}
+        elevation={0}
+        style={{
+          backgroundColor: t.colors.surface,
+          borderRadius: 16,
+          borderWidth: 1,
+          borderColor: t.colors.outlineVariant,
+        }}
       />
 
       {/* Bộ lọc theo môn học / chuyên đề */}
-      <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 8, paddingVertical: 2 }}
+      >
         <Chip
           selected={selectedFolder === "all" && !likedFilter}
           showSelectedCheck={false}
@@ -189,7 +218,7 @@ export default function Community() {
             {f}
           </Chip>
         ))}
-      </View>
+      </ScrollView>
 
       <View
         style={{
@@ -198,7 +227,7 @@ export default function Community() {
           alignItems: "center",
         }}
       >
-        <Text variant="labelLarge" style={{ opacity: 0.7 }}>
+        <Text variant="labelLarge" style={{ color: t.colors.onSurfaceVariant }}>
           Hiển thị {filtered.length} tài liệu cộng đồng
         </Text>
       </View>
@@ -218,37 +247,52 @@ export default function Community() {
                 m.title === `${d.title} (Bản sao)` ||
                 m.id === d.id),
           );
+          const kindStyle = getDocumentKindStyle(d.kind, t.dark);
+          const authorInitial = (d.authorName || "A").charAt(0).toUpperCase();
 
           return (
             <Panel key={d.id}>
               <View style={{ gap: 12 }}>
-                {/* Header card: Avatar & Tiêu đề */}
+                {/* Header card: Icon & Tiêu đề */}
                 <View style={{ flexDirection: "row", gap: 12, alignItems: "flex-start" }}>
-                  <View
-                    style={[
-                      styles.iconBox,
-                      {
-                        backgroundColor:
-                          d.kind === "pdf" ? "#FFF0D5" : "#EAE5FF",
-                      },
-                    ]}
-                  >
-                    <Icon
-                      source={
-                        d.kind === "pdf" ? "file-pdf-box" : "text-box-outline"
-                      }
-                      color="#5945C6"
-                      size={30}
-                    />
+                  <View style={[styles.iconBox, { backgroundColor: kindStyle.bg }]}>
+                    <Icon source={kindStyle.icon} color={kindStyle.color} size={28} />
                   </View>
                   <View style={{ flex: 1, gap: 4 }}>
-                    <Text variant="titleMedium" style={{ fontWeight: "700" }}>
+                    <Text variant="titleMedium" style={{ fontWeight: "700", lineHeight: 22 }}>
                       {d.title}
                     </Text>
-                    <Text variant="bodySmall" style={{ opacity: 0.65 }}>
-                      Chia sẻ bởi: <Text style={{ fontWeight: "600" }}>{d.authorName || "Ẩn danh"}</Text> •{" "}
-                      {new Date(d.createdAt).toLocaleDateString("vi-VN")}
-                    </Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                      <View
+                        style={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: 10,
+                          backgroundColor: t.colors.primaryContainer,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 10,
+                            fontWeight: "800",
+                            color: t.colors.onPrimaryContainer,
+                          }}
+                        >
+                          {authorInitial}
+                        </Text>
+                      </View>
+                      <Text
+                        variant="bodySmall"
+                        style={{ color: t.colors.onSurfaceVariant }}
+                      >
+                        <Text style={{ fontWeight: "600", color: t.colors.onSurface }}>
+                          {d.authorName || "Ẩn danh"}
+                        </Text>{" "}
+                        · {new Date(d.createdAt).toLocaleDateString("vi-VN")}
+                      </Text>
+                    </View>
                   </View>
                 </View>
 
@@ -256,31 +300,39 @@ export default function Community() {
                 {d.ai?.summary?.overview && (
                   <Text
                     numberOfLines={2}
-                    style={{ opacity: 0.8, fontSize: 13, lineHeight: 19 }}
+                    style={{
+                      color: t.colors.onSurfaceVariant,
+                      fontSize: 13,
+                      lineHeight: 19,
+                    }}
                   >
                     {d.ai.summary.overview}
                   </Text>
                 )}
 
                 {/* Tags thông tin */}
-                <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+                <View style={styles.chipRow}>
                   {d.folder && (
-                    <Chip compact icon="folder-outline">
-                      {d.folder}
-                    </Chip>
+                    <StatusChip icon="folder-outline" label={d.folder} />
                   )}
-                  <Chip compact icon="book-open-outline">
-                    {d.blocks.length} đoạn
-                  </Chip>
+                  <StatusChip
+                    icon="book-open-outline"
+                    label={`${d.blocks.length} đoạn`}
+                    tone="primary"
+                  />
                   {d.ai?.flashcards && (
-                    <Chip compact icon="cards-outline">
-                      {d.ai.flashcards.length} thẻ nhớ
-                    </Chip>
+                    <StatusChip
+                      icon="cards-outline"
+                      label={`${d.ai.flashcards.length} thẻ nhớ`}
+                      tone="success"
+                    />
                   )}
                   {d.ai?.quiz && (
-                    <Chip compact icon="help-circle-outline">
-                      {d.ai.quiz.length} câu Quiz
-                    </Chip>
+                    <StatusChip
+                      icon="help-circle-outline"
+                      label={`${d.ai.quiz.length} câu Quiz`}
+                      tone="accent"
+                    />
                   )}
                 </View>
 
@@ -288,7 +340,7 @@ export default function Community() {
                 <View
                   style={{
                     borderTopWidth: 1,
-                    borderTopColor: t.colors.surfaceVariant,
+                    borderTopColor: t.colors.outlineVariant,
                     paddingTop: 10,
                     gap: 8,
                   }}
@@ -313,6 +365,7 @@ export default function Community() {
                       mode="outlined"
                       compact
                       icon="eye-outline"
+                      style={{ borderRadius: 10 }}
                       onPress={() => router.push(`/document/${d.id}`)}
                     >
                       Xem chi tiết
@@ -324,9 +377,10 @@ export default function Community() {
                     loading={savingId === d.id}
                     disabled={savingId === d.id || isSaved}
                     onPress={() => handleClone(d)}
-                    style={{ width: "100%" }}
+                    style={{ width: "100%", borderRadius: 14 }}
+                    contentStyle={{ height: 42 }}
                   >
-                    {isSaved ? "✓ Đã lưu vào Thư viện" : "Lưu về Thư viện để học offline"}
+                    {isSaved ? "Đã lưu vào Thư viện" : "Lưu về Thư viện để học offline"}
                   </Button>
                 </View>
               </View>
@@ -335,10 +389,31 @@ export default function Community() {
         })
       ) : (
         <Panel>
-          <View style={{ alignItems: "center", gap: 12, paddingVertical: 20 }}>
-            <Icon source="magnify-close" size={40} color={t.colors.primary} />
-            <Text variant="titleMedium">Không tìm thấy tài liệu phù hợp</Text>
-            <Text style={{ opacity: 0.7, textAlign: "center" }}>
+          <View style={{ alignItems: "center", gap: 12, paddingVertical: 24 }}>
+            <View
+              style={[
+                styles.iconBox,
+                {
+                  backgroundColor: t.colors.surfaceVariant,
+                  width: 64,
+                  height: 64,
+                  borderRadius: 20,
+                },
+              ]}
+            >
+              <Icon source="magnify-close" size={32} color={t.colors.primary} />
+            </View>
+            <Text variant="titleMedium" style={{ fontWeight: "700" }}>
+              Không tìm thấy tài liệu phù hợp
+            </Text>
+            <Text
+              style={{
+                color: t.colors.onSurfaceVariant,
+                textAlign: "center",
+                lineHeight: 21,
+                maxWidth: 280,
+              }}
+            >
               Hãy thử tìm kiếm với từ khóa khác hoặc chia sẻ tài liệu của bạn lên cộng đồng!
             </Text>
           </View>

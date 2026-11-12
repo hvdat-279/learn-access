@@ -12,6 +12,7 @@ import {
   useTheme,
   RadioButton,
   Icon,
+  ProgressBar,
 } from "react-native-paper";
 import * as Crypto from "expo-crypto";
 import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
@@ -514,11 +515,11 @@ function Reader({ document }: { document: Document }) {
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <title>${document.title}</title>
             <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 36px; line-height: 1.6; color: #1e293b; max-width: 800px; margin: 0 auto; }
-              h1 { color: #43338E; border-bottom: 2px solid #6650D8; padding-bottom: 8px; margin-bottom: 4px; }
-              .meta { font-size: 13px; color: #64748b; margin-bottom: 24px; }
-              h2 { color: #5945C6; margin-top: 26px; border-left: 4px solid #BE7F13; padding-left: 10px; font-size: 18px; }
-              .summary-box { background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 12px; padding: 18px; margin: 16px 0; }
+              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 36px; line-height: 1.6; color: #0F172A; background: #FFFFFF; max-width: 800px; margin: 0 auto; }
+              h1 { color: #1E40AF; border-bottom: 2px solid #2463EB; padding-bottom: 8px; margin-bottom: 4px; }
+              .meta { font-size: 13px; color: #64748B; margin-bottom: 24px; }
+              h2 { color: #1E40AF; margin-top: 26px; border-left: 4px solid #2463EB; padding-left: 10px; font-size: 18px; }
+              .summary-box { background: #F6F8FB; border: 1px solid #E2E8F0; border-radius: 12px; padding: 18px; margin: 16px 0; }
               .point { margin: 8px 0; }
               .term { background: #fef3c7; padding: 4px 8px; border-radius: 6px; font-weight: bold; display: inline-block; margin: 4px 0; }
               .block { margin-bottom: 14px; padding: 10px 14px; border-radius: 8px; background: #fafafa; border: 1px solid #f1f5f9; }
@@ -540,7 +541,7 @@ function Reader({ document }: { document: Document }) {
             ${
               document.ai?.summary
                 ? `
-              <h2>📌 TÓM TẮT TRỌNG TÂM TỪ AI</h2>
+              <h2>TÓM TẮT TRỌNG TÂM</h2>
               <div class="summary-box">
                 <p><strong>Tổng quan:</strong> ${document.ai.summary.overview}</p>
                 <div style="margin-top: 10px;">
@@ -564,7 +565,7 @@ function Reader({ document }: { document: Document }) {
             ${
               document.ai?.quiz?.length
                 ? `
-              <h2>🎯 CÂU HỎI ÔN TẬP (AI QUIZ)</h2>
+              <h2>CÂU HỎI ÔN TẬP (QUIZ)</h2>
               ${document.ai.quiz
                 .map(
                   (q, i) => `
@@ -582,7 +583,7 @@ function Reader({ document }: { document: Document }) {
                 : ""
             }
 
-            <h2>📖 NỘI DUNG VĂN BẢN CHI TIẾT</h2>
+            <h2>NỘI DUNG VĂN BẢN CHI TIẾT</h2>
             ${document.blocks
               .map(
                 (b) => `
@@ -876,20 +877,26 @@ function Reader({ document }: { document: Document }) {
       {!isOwner && (
         <View
           style={{
-            backgroundColor: "#F5F3FF",
-            padding: 10,
-            borderRadius: 12,
+            backgroundColor: t.colors.primaryContainer,
+            padding: 12,
+            borderRadius: 14,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            marginBottom: 6,
+            marginBottom: 8,
             borderWidth: 1,
-            borderColor: "#DDD6FE",
+            borderColor: t.colors.primary + "44",
           }}
         >
           <View style={{ flex: 1 }}>
-            <Text style={{ fontWeight: "700", color: "#5945C6", fontSize: 13 }}>
-              Tài liệu Cộng đồng • {document.authorName || "Sinh viên"}
+            <Text
+              style={{
+                fontWeight: "700",
+                color: t.colors.onPrimaryContainer,
+                fontSize: 13,
+              }}
+            >
+              Tài liệu Cộng đồng · {document.authorName || "Sinh viên"}
             </Text>
           </View>
           <Button
@@ -1178,11 +1185,25 @@ function Reader({ document }: { document: Document }) {
                 <Text variant="titleLarge">Những ý chính</Text>
                 {document.ai.summary.points.map((point, i) => (
                   <Panel key={i}>
-                    <Text
-                      style={{ fontWeight: "700", color: t.colors.primary }}
+                    <View
+                      style={{
+                        alignSelf: "flex-start",
+                        backgroundColor: t.colors.primaryContainer,
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: 8,
+                      }}
                     >
-                      Ý {i + 1}
-                    </Text>
+                      <Text
+                        variant="labelMedium"
+                        style={{
+                          fontWeight: "800",
+                          color: t.colors.onPrimaryContainer,
+                        }}
+                      >
+                        Ý {i + 1}
+                      </Text>
+                    </View>
                     <Text
                       style={{
                         fontSize: settings.fontSize,
@@ -1254,36 +1275,47 @@ function Reader({ document }: { document: Document }) {
                     </View>
 
                     {/* Khối thẻ lật tương tác */}
-                    <View
-                      style={{
-                        minHeight: 180,
+                    <Pressable
+                      onPress={() => setCardFlipped(!cardFlipped)}
+                      style={({ pressed }) => ({
+                        minHeight: 190,
                         backgroundColor: cardFlipped
-                          ? t.colors.primaryContainer ?? "#EDE9FE"
+                          ? t.colors.primaryContainer
                           : t.colors.surfaceVariant,
-                        borderRadius: 18,
+                        borderRadius: 20,
                         padding: 24,
                         alignItems: "center",
                         justifyContent: "center",
-                        gap: 12,
+                        gap: 14,
                         borderWidth: 1.5,
-                        borderColor: cardFlipped ? t.colors.primary : "transparent",
-                      }}
+                        borderColor: cardFlipped
+                          ? t.colors.primary
+                          : t.colors.outlineVariant,
+                        opacity: pressed ? 0.9 : 1,
+                      })}
                     >
                       <Text
                         variant="labelSmall"
                         style={{
                           letterSpacing: 1.5,
-                          color: cardFlipped ? t.colors.primary : t.colors.onSurfaceVariant,
-                          fontWeight: "700",
+                          color: cardFlipped
+                            ? t.colors.onPrimaryContainer
+                            : t.colors.onSurfaceVariant,
+                          fontWeight: "800",
                         }}
                       >
-                        {cardFlipped ? "MẶT SAU (ĐỊNH NGHĨA / GIẢI THÍCH)" : "MẶT TRƯỚC (CÂU HỎI / KHÁI NIỆM)"}
+                        {cardFlipped
+                          ? "MẶT SAU · ĐỊNH NGHĨA"
+                          : "MẶT TRƯỚC · KHÁI NIỆM"}
                       </Text>
                       <Text
                         variant="titleMedium"
                         style={{
                           textAlign: "center",
                           lineHeight: 26,
+                          color: cardFlipped
+                            ? t.colors.onPrimaryContainer
+                            : t.colors.onSurface,
                           fontWeight: cardFlipped ? "500" : "700",
                         }}
                       >
@@ -1292,11 +1324,12 @@ function Reader({ document }: { document: Document }) {
                       <Button
                         mode="contained-tonal"
                         icon="sync"
+                        compact
                         onPress={() => setCardFlipped(!cardFlipped)}
                       >
                         {cardFlipped ? "Xem lại câu hỏi" : "Lật xem đáp án"}
                       </Button>
-                    </View>
+                    </Pressable>
 
                     {/* Điều hướng thẻ */}
                     <View
@@ -1338,9 +1371,24 @@ function Reader({ document }: { document: Document }) {
                         }}
                       />
                     </View>
-                    <Text style={{ textAlign: "center", opacity: 0.7 }}>
-                      Tiến độ: Đã thuộc {knownCount}/{flashcards.length} thẻ ({Math.round((knownCount / flashcards.length) * 100)}%)
-                    </Text>
+                    <View style={{ gap: 6 }}>
+                      <Text
+                        variant="bodySmall"
+                        style={{
+                          textAlign: "center",
+                          color: t.colors.onSurfaceVariant,
+                          fontWeight: "600",
+                        }}
+                      >
+                        Tiến độ: Đã thuộc {knownCount}/{flashcards.length} thẻ (
+                        {Math.round((knownCount / flashcards.length) * 100)}%)
+                      </Text>
+                      <ProgressBar
+                        progress={knownCount / flashcards.length}
+                        color={t.colors.tertiary}
+                        style={{ height: 8, borderRadius: 4 }}
+                      />
+                    </View>
                   </Panel>
                 ) : (
                   <Panel>
@@ -1403,7 +1451,7 @@ function Reader({ document }: { document: Document }) {
                         }}
                       >
                         <Text variant="titleMedium" style={{ fontWeight: "700", color: t.colors.onSurface }}>
-                          {quizScore / quiz.length >= 0.7 ? "🎉 Hoàn thành xuất sắc!" : "📖 Cần ôn tập thêm!"}
+                          {quizScore / quiz.length >= 0.7 ? "Hoàn thành xuất sắc!" : "Cần ôn tập thêm"}
                         </Text>
                         <Text variant="headlineSmall" style={{ fontWeight: "800", color: t.colors.onSurface }}>
                           {quizScore} / {quiz.length} câu đúng ({Math.round((quizScore / quiz.length) * 100)}%)
@@ -1497,7 +1545,7 @@ function Reader({ document }: { document: Document }) {
                                   color: isCorrect ? "#22C55E" : "#EF4444",
                                 }}
                               >
-                                {isCorrect ? "✔ Đáp án chính xác" : "❌ Chưa chính xác"}
+                                {isCorrect ? "Đáp án chính xác" : "Chưa chính xác"}
                               </Text>
                               <Text style={{ marginTop: 4, fontSize: 13, lineHeight: 18, color: t.colors.onSurfaceVariant }}>
                                 {q.explanation}
@@ -1542,7 +1590,7 @@ function Reader({ document }: { document: Document }) {
                       icon="help-circle"
                       onPress={generateAiQuiz}
                     >
-                      🎯 Tạo đề trắc nghiệm AI ngay
+                      Tạo đề trắc nghiệm ngay
                     </Button>
                   </Panel>
                 )}
@@ -1622,24 +1670,53 @@ function Reader({ document }: { document: Document }) {
                 nghe.
               </Text>
             </Panel>
-            {segments.map((segment, i) => (
-              <Panel
-                key={i}
-                color={i === index ? t.colors.surfaceVariant : undefined}
-              >
-                <Text
-                  style={{
-                    fontSize: settings.fontSize,
-                    lineHeight: settings.fontSize * settings.lineHeight,
-                  }}
+            {segments.map((segment, i) => {
+              const active = i === index;
+              return (
+                <Panel
+                  key={i}
+                  accent={active}
+                  color={active ? t.colors.surfaceVariant : undefined}
                 >
-                  {segment}
-                </Text>
-                <Button icon="play" onPress={() => play(i)}>
-                  Nghe đoạn này
-                </Button>
-              </Panel>
-            ))}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text
+                      variant="labelMedium"
+                      style={{
+                        fontWeight: "700",
+                        color: active
+                          ? t.colors.primary
+                          : t.colors.onSurfaceVariant,
+                      }}
+                    >
+                      {active ? "Đang chọn · Đoạn " + (i + 1) : "Đoạn " + (i + 1)}
+                    </Text>
+                    <Button
+                      mode={active ? "contained" : "outlined"}
+                      compact
+                      icon="play"
+                      style={{ borderRadius: 10 }}
+                      onPress={() => play(i)}
+                    >
+                      Nghe
+                    </Button>
+                  </View>
+                  <Text
+                    style={{
+                      fontSize: settings.fontSize,
+                      lineHeight: settings.fontSize * settings.lineHeight,
+                    }}
+                  >
+                    {segment}
+                  </Text>
+                </Panel>
+              );
+            })}
           </>
         )}
       </ScrollView>
