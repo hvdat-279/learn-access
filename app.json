@@ -37,6 +37,7 @@
         }
       ],
       "expo-sqlite",
+      "expo-status-bar",
       "expo-secure-store",
       "expo-web-browser",
       "expo-sharing",
